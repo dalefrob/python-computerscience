@@ -1,0 +1,41 @@
+{
+  "alias": "kenney",
+  "tilesize": 18,
+  "tiles": {
+    "1": {
+      "x": 0,
+      "y": 0,
+      "data": {
+        "terrain": "grass"
+      }
+    },
+    "2": {
+      "x": 0,
+      "y": 72,
+      "data": {
+        "terrain": "snow"
+      }
+    },
+    "3": {
+      "x": 18,
+      "y": 0,
+      "data": {
+        "terrain": "grass"
+      }
+    },
+    "4": {
+      "x": 36,
+      "y": 0,
+      "data": {
+        "terrain": "grass"
+      }
+    },
+    "5": {
+      "x": 54,
+      "y": 0,
+      "data": {
+        "terrain": "grass"
+      }
+    }
+  }
+}
