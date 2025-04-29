@@ -1,6 +1,9 @@
-import random
 import pygame as pg
 import os
+from coin import Coin
+from game_utils import *
+from player import Player
+import resources
 from tilemap import *
 
 FPS = 60
@@ -9,85 +12,91 @@ FPS = 60
 current_dir = os.path.dirname(__file__)
 
 testmap = [
-  [0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,2,2,2],
-  [0,0,3,5,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0],
-  [0,1,0,0,0,3,5,0,0],
-  [0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0],
-  [3,4,4,4,4,4,4,4,5],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0],
+  [0,0,3,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,1,0,0,0,3,5,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,0],
 ]
 
+class Game:
+    def __init__(self):
+        # Initialize your game systems here
+        self.tilemap = Tilemap(...)  # Load your tilemap
+        self.player = Player(x=100, y=100, width=50, height=50, game=self)
 
-class Player(pg.sprite.Sprite):
-  def __init__(self, x, y, *groups):
-    super().__init__(*groups)
-    self.position = pg.Vector2(x, y)
-    # load image
-    self.animation = self.load_animation()
-    self.current_frame = 0
-    self.rect = self.animation[self.current_frame].get_rect()
+    def update(self, dt):
+        # Update game systems (player, tilemap, etc.)
+        self.player.update()
+        
+    def draw(self, screen):
+        screen.fill("black")
+        self.tilemap.draw(screen)
+        self.player.draw(screen)
 
-    self.anim_speed = 0.25
-  
-
-  def load_animation(self):
-    full_image : pg.Surface = pg.image.load(os.path.join(current_dir, "assets/tilemap-characters_packed.png")).convert_alpha()
-    frames = []
-    for i in range(2):
-      frame = full_image.subsurface(i * 24, 0, 24, 24)
-      frames.append(frame)
-    return frames
-
-
-  def update(self, dt):
-    self.anim_speed -= dt
-    if self.anim_speed <= 0:
-      self.anim_speed = 0.25
-      self.current_frame += 1
-      if self.current_frame >= len(self.animation):
-        self.current_frame = 0
-
-
-  def draw(self, screen):
-    screen.blit(self.animation[self.current_frame], self.rect)
-
-
-  def handle_input(self, keys):
-    if keys[pg.K_RIGHT]: 
-      self.rect.x += 2 
-    elif keys[pg.K_LEFT]:
-      self.rect.x -= 2
 
 
 def main():
   pg.init()
-  screen = pg.display.set_mode((400, 400))
+  flags = pg.SCALED
+  screen = pg.display.set_mode((400, 400), flags)
   pg.display.set_caption("World Map!")
 
   clock = pg.time.Clock()
+  resources.load()
+
+
+  # load resources
+  player_spritesheet : pg.Surface = pg.image.load(os.path.join(current_dir, "assets/tilemap-characters_packed.png")).convert_alpha()
+  tileset_texture = pg.image.load(os.path.join(current_dir, "assets/tilemap_packed.png")).convert_alpha()
 
   # initialize the map
-  tileset_path = os.path.join(current_dir, "assets/tilemap_packed.png")
-  tilest_data_path = os.path.join(current_dir, "assets/tileset_data.json")
-  tileset = Tileset(tileset_path, tilest_data_path)
+  tileset_data = Tileset.load_tileset_data_json(os.path.join(current_dir, "assets/tileset_data.json"))
+  tileset = Tileset(tileset_texture, tileset_data)
   tilemap = Tilemap(tileset, testmap)
 
   # init player
   player = Player(50, 50)
+  player.add_animation("default", load_animation_frames(player_spritesheet, 0, 0, 24, 1))
+  player.add_animation("walk", load_animation_frames(player_spritesheet, 0, 0, 24, 2))
+  player.add_animation("jump", load_animation_frames(player_spritesheet, 24, 0, 24, 1))
+
+  # coin
+  coin = Coin(200, 200)
 
   running = True
   while running:
-    dt = clock.tick(FPS) / 1000.0
+    dt = min(clock.tick(60) / 1000.0, 0.05)
 
     screen.fill("black")
     tilemap.draw(screen)
 
     player.handle_input(pg.key.get_pressed())
     player.update(dt)
+    coin.update(dt)
+
+    # check collisions
+    response = resolve_tilemap_collision(player.rect, tilemap)
+    if response:
+        push_vector, normal = response
+        # Move the player out of collision
+        player.rect.x += push_vector.x
+        player.rect.y += push_vector.y
+
+        # Cancel velocity in the direction of collision
+        if normal.x != 0:
+          player.velocity.x = 0
+        if normal.y != 0:
+          if normal.y < 0:
+             player.on_ground = True 
+          player.velocity.y = 0
+    
     player.draw(screen)
+    coin.draw(screen)
 
     pg.display.flip()
 

@@ -1,6 +1,7 @@
 import pygame as pg
 import json
 
+from game_utils import *
 
 
 class Tilemap:
@@ -9,8 +10,8 @@ class Tilemap:
 
     if map_data:
         self.tiles = map_data
-        width = len(map_data)
-        height = len(map_data[0])
+        height = len(map_data)
+        width = len(map_data[0])
     else:
       self.tiles = [[0 for _ in range(width)] for _ in range(height)]
 
@@ -19,8 +20,11 @@ class Tilemap:
     self.surf.set_colorkey("black")
 
 
-  def draw(self, screen):
+  def get_tilesize(self):
+    return self.tileset.tilesize
 
+
+  def draw(self, screen):
     tilesize = self.tileset.tilesize
     for y in range(len(self.tiles)):
       for x in range(len(self.tiles[y])):
@@ -34,34 +38,40 @@ class Tilemap:
     screen.blit(self.surf, (0, 0))
 
 
-  def get_tile_at(self, x, y):
-    if 0 <= x <= len(self.tiles) and 0 <= y <= len(self.tiles[x]): 
+  def world_to_map(self, x, y):
+    return (x // self.get_tilesize(), y // self.get_tilesize())
+
+
+  def map_to_world(self, x, y):
+    return pg.Vector2(self.get_tilesize() * x, self.get_tilesize() * y)
+
+
+  def get_tile_id_at(self, x, y):
+    if 0 <= y < len(self.tiles) and 0 <= x < len(self.tiles[y]): 
       return self.tiles[y][x]
     return 0
 
 
 class Tile:
-  def __init__(self, image, data = {}):
+  def __init__(self, image : pg.Surface, tile_data = {}):
     self.image = image
-    self.data = data
+    self.data = tile_data
+    self.rect = image.get_rect()
 
 
 
 class Tileset:
-  def __init__(self, tileset_path, tileset_json_path):
+  def __init__(self, texture : pg.Surface, tileset_data):
     # init vars
     self.tiles = {}
     self.tile_data = {}
     # load texture
-    self.texture = pg.image.load(tileset_path).convert_alpha()
-    # load tile data
-    file = open(tileset_json_path)
-    json_data = json.load(file)
-
-    self.tilesize = json_data["tilesize"]
-    for id in json_data["tiles"]:
+    self.texture = texture
+   
+    self.tilesize = tileset_data["tilesize"]
+    for id in tileset_data["tiles"]:
       tile_id = int(id)
-      props = json_data["tiles"][id]
+      props = tileset_data["tiles"][id]
       self.add_tile(tile_id, pg.Rect(props["x"], props["y"], self.tilesize, self.tilesize), props["data"])
 
 
@@ -77,6 +87,15 @@ class Tileset:
     return self.tiles[tile_id]
 
 
+  @staticmethod
+  def load_tileset_data_json(tileset_json_path):
+     # load tile data
+    file = open(tileset_json_path)
+    json_data = json.load(file)
+    file.close()
+    return json_data
+
+
 
 
 class Shape:
@@ -84,31 +103,6 @@ class Shape:
     self.position = position
     self.points = points
   
-  
-
-
-def is_point_in_polygon(x, y, polygon):
-  """
-  Algorithm to check if a point is within a polygon by raycasting
-  a horizontal line across the polygon and counting the intersections.
-  """
-  num = len(polygon)
-  j = num - 1
-  inside = False
-
-  for i in range(num):
-      xi, yi = polygon[i] # point a
-      xj, yj = polygon[j] # point a - 1 (previous point)
-      if ((yi > y) != (yj > y)):
-          x_intersect = (xj - xi) * (y - yi) / (yj - yi) + xi
-          if x < x_intersect:
-              inside = not inside
-      j = i
-
-  return inside
-
-
-
 shapes = {
   "full": [(0,0), (1,0), (1,1), (0,1)],
   "left_slope": [(0,1), (1,0), (1,1)],
