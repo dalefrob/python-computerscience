@@ -119,14 +119,18 @@ def draw_rays():
                 proj_plane_dist = (SCREEN_WIDTH / 2) / math.tan(HALF_FOV)
                 wall_height = (TILE_SIZE / corrected_depth) * proj_plane_dist
 
-                # Determine wall hit offset for texture sampling
-                # Depending on which side we hit, get the "fractional" part of the wall
-                hit_x = target_x % TILE_SIZE
-                hit_y = target_y % TILE_SIZE
-                if abs(hit_x) > abs(hit_y):
-                    texture_x = int(hit_x / TILE_SIZE * wall_texture.get_width())
+                # Determine if the ray hit a vertical or horizontal wall
+                dx = abs(target_x - player["x"])
+                dy = abs(target_y - player["y"])
+
+                if dx > dy:
+                    # Hit a vertical wall (east/west)
+                    hit_offset = target_y % TILE_SIZE
                 else:
-                    texture_x = int(hit_y / TILE_SIZE * wall_texture.get_width())
+                    # Hit a horizontal wall (north/south)
+                    hit_offset = target_x % TILE_SIZE
+
+                texture_x = int(hit_offset / TILE_SIZE * wall_texture.get_width())
 
                 # Calculate top/bottom of wall slice on screen
                 wall_top = SCREEN_HEIGHT / 2 - wall_height / 2
