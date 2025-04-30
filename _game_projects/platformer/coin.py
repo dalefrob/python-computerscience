@@ -10,3 +10,8 @@ class Coin(AnimatedSprite):
     image = resources.images["fg-tileset"].subsurface(pg.Rect(11 * 18, 7 * 18, 36, 18))
     animation = load_animation_frames(image, 0, 0, 18, 2)
     self.add_animation("default", animation)
+    self.rect = pg.Rect(x, y, 18, 18)
+
+  def set_position(self, x, y):
+    self.rect.x = x
+    self.rect.y = y

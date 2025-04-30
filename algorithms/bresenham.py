@@ -40,6 +40,36 @@ def draw_line(x0, y0, x1, y1, screen):
       pygame.draw.circle(screen, "white", (x, y), 1)
 
 def draw_line_bresenham(x1, y1, x2, y2, color):
+    """
+    Draws a line between two points (x1, y1) and (x2, y2) using Bresenham's line algorithm.
+    Bresenham's algorithm is an efficient way to calculate and draw a straight line 
+    between two points in a grid-based system, such as a pixel-based screen.
+    Parameters:
+        x1 (int): The x-coordinate of the starting point.
+        y1 (int): The y-coordinate of the starting point.
+        x2 (int): The x-coordinate of the ending point.
+        y2 (int): The y-coordinate of the ending point.
+        color (tuple): The color of the line, typically represented as an RGB tuple.
+    Steps:
+        1. Cast the input coordinates to integers to ensure proper grid alignment.
+        2. Calculate the absolute differences in the x and y directions (dx, dy).
+        3. Determine the step direction (sx, sy) for x and y based on the relative positions 
+           of the start and end points.
+        4. Initialize the decision variable `err` to half of the larger difference (dx or dy).
+        5. Depending on whether the line is more horizontal (dx > dy) or vertical (dy >= dx):
+           - Iterate through the grid points along the dominant axis (x or y).
+           - Draw a pixel at the current position using `pygame.draw.circle`.
+           - Adjust the decision variable `err` by subtracting the smaller difference (dy or dx).
+           - If the decision variable becomes negative, adjust the secondary axis (y or x) 
+             and reset `err` by adding the larger difference (dx or dy).
+        6. Continue until the end point (x2, y2) is reached.
+        7. Draw the final point to ensure the line is complete.
+    Note:
+        This function uses `pygame.draw.circle` to draw individual pixels on the screen. 
+        Ensure that the `screen` object is properly initialized in your Pygame environment 
+        before calling this function.
+    """
+
     # cast to integers
     x1 = int(x1)
     y1 = int(y1)

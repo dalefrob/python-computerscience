@@ -8,6 +8,31 @@ pygame.display.set_caption('Polygon Check')
 clock = pygame.time.Clock()
 
 def is_point_in_polygon(x, y, polygon):
+    """
+    Determines if a point is inside a given polygon using the ray-casting algorithm.
+    Args:
+        x (float): The x-coordinate of the point to test.
+        y (float): The y-coordinate of the point to test.
+        polygon (list of tuple): A list of (x, y) tuples representing the vertices of the polygon
+                                 in order (either clockwise or counterclockwise).
+    Returns:
+        bool: True if the point (x, y) is inside the polygon, False otherwise.
+    Algorithm:
+        1. Initialize a variable `inside` to False. This will track whether the point is inside the polygon.
+        2. Loop through each edge of the polygon:
+           - For each edge, consider two consecutive vertices (xi, yi) and (xj, yj).
+           - Check if the y-coordinate of the point lies between the y-coordinates of the edge's endpoints.
+             This determines if the horizontal ray from the point intersects the edge.
+        3. If the ray intersects the edge, calculate the x-coordinate of the intersection point.
+           - Use the formula for a line segment to find the x-coordinate of the intersection.
+           - If the x-coordinate of the point is less than the intersection point, toggle the `inside` variable.
+        4. Repeat the process for all edges of the polygon.
+        5. Return the value of `inside`. If `inside` is True, the point is inside the polygon; otherwise, it is outside.
+    Notes:
+        - The algorithm assumes the polygon is simple (no self-intersections).
+        - The polygon can be convex or concave.
+        - Points on the boundary of the polygon may be considered outside depending on the implementation.
+    """
     num = len(polygon)
     j = num - 1
     inside = False

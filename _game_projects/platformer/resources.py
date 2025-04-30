@@ -1,16 +1,18 @@
 import json
 import pygame
+import os
 
 images = {}
 sounds = {}
 other = {}
 
 def load():
+    current_dir = os.path.dirname(__file__)
     global images, sounds, other
-    images["fg-tileset"] = pygame.image.load("assets/tilemap_packed.png").convert_alpha()
-    images["characters"] = pygame.image.load("assets/tilemap-characters_packed.png").convert_alpha()
+    images["fg-tileset"] = pygame.image.load(os.path.join(current_dir, "assets/tilemap_packed.png")).convert_alpha()
+    images["characters"] = pygame.image.load(os.path.join(current_dir, "assets/tilemap-characters_packed.png")).convert_alpha()
 
-    other["tileset_data"] = load_tileset_data_json( "assets/tileset_data.json")
+    other["tileset_data"] = load_tileset_data_json(os.path.join(current_dir, "assets/tileset_data.json"))
 
 def load_tileset_data_json(tileset_json_path):
      # load tile data
