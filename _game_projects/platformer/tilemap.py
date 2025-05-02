@@ -2,6 +2,7 @@ import pygame as pg
 import json
 
 from game_utils import *
+from camera import Camera
 
 
 class Tilemap:
@@ -19,6 +20,8 @@ class Tilemap:
     self.surf.fill("black")
     self.surf.set_colorkey("black")
 
+    self.camera = Camera.get_instance()
+
 
   def get_tilesize(self):
     return self.tileset.tilesize
@@ -35,7 +38,8 @@ class Tilemap:
             self.surf.blit(tile.image, (x * tilesize, y * tilesize))
 
     # draw the surface on the screen
-    screen.blit(self.surf, (0, 0))
+    rect = pg.Rect(0,0, self.camera.width, self.camera.height)
+    screen.blit(self.surf, self.camera.apply(rect))
 
 
   def world_to_map(self, x, y):

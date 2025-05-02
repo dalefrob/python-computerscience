@@ -1,20 +1,23 @@
 import pygame as pg
-
+from camera import Camera
 from animatedsprite import AnimatedSprite
+import resources
 
 GRAVITY = 16.0
 
 
 class Player(AnimatedSprite):
-  def __init__(self, x, y, *groups):
-    super().__init__((x, y))
-    self.position = pg.Vector2(x, y)
+  def __init__(self, position, initial_frames):
+    super().__init__(position, initial_frames)
+
     self.velocity = pg.Vector2(0, 0)
     self.speed = 30.0
     self.on_ground = False
 
     self.rect.size = (18,18)
     self.draw_offset = (-2,-4)
+
+    self.camera = Camera.get_instance()
 
 
   def update(self, dt):
@@ -33,6 +36,7 @@ class Player(AnimatedSprite):
 
 
   def jump(self):
+    pg.mixer.Sound.play(resources.sounds["jump"])
     self.velocity.y = -7.8
     self.on_ground = False
 
@@ -54,3 +58,8 @@ class Player(AnimatedSprite):
       self.velocity.x = -2
     else:
       self.velocity.x = 0
+
+  def draw_with_offset(self, screen):
+    # orig_image : pg.Surface = self.animations[self.current_animation][self.current_frame]
+    # self.image = pg.transform.flip(orig_image, self.flip_h, False)
+    screen.blit(self.image,  self.camera.apply(self.rect.move(self.draw_offset)))

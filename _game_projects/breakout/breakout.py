@@ -1,3 +1,5 @@
+# An intermediate project to teach classes and instantiation
+
 import pygame as pg
 
 # ----

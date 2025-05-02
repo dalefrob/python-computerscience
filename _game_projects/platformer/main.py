@@ -1,9 +1,11 @@
 import pygame as pg
 import os
+from camera import Camera
 from coin import Coin
 from game_utils import *
 from player import Player
 import resources
+from spritegroup import SpriteGroup
 from tilemap import *
 
 FPS = 60
@@ -24,27 +26,31 @@ testmap = [
 ]
 
 class Game:
-    def __init__(self):
-        # Initialize your game systems here
-        self.tilemap = Tilemap(...)  # Load your tilemap
-        self.player = Player(x=100, y=100, width=50, height=50, game=self)
+  def __init__(self):
+      # Initialize your game systems here
+      self.tilemap = Tilemap(...)  # Load your tilemap
+      self.player = Player(x=100, y=100, width=50, height=50, game=self)
 
-    def update(self, dt):
-        # Update game systems (player, tilemap, etc.)
-        self.player.update()
-        
-    def draw(self, screen):
-        screen.fill("black")
-        self.tilemap.draw(screen)
-        self.player.draw(screen)
+  def update(self, dt):
+      # Update game systems (player, tilemap, etc.)
+      self.player.update()
+      
+  def draw(self, screen):
+      screen.fill("black")
+      self.tilemap.draw(screen)
+      self.player.draw(screen)
 
 
 
 def main():
   pg.init()
+  pg.mixer.init()
   flags = pg.SCALED
   screen = pg.display.set_mode((320, 280), flags)
   pg.display.set_caption("World Map!")
+
+  # camera
+  camera = Camera(320, 280)
 
   clock = pg.time.Clock()
   resources.load()
@@ -60,15 +66,13 @@ def main():
   tilemap = Tilemap(tileset, testmap)
 
   # init player
-  player = Player(50, 50)
-  player.add_animation("default", load_animation_frames(player_spritesheet, 0, 0, 24, 1))
+  player = Player((50, 50), load_animation_frames(player_spritesheet, 0, 0, 24, 1))
   player.add_animation("walk", load_animation_frames(player_spritesheet, 0, 0, 24, 2))
   player.add_animation("jump", load_animation_frames(player_spritesheet, 24, 0, 24, 1))
-  player_group = pg.sprite.GroupSingle(player)
 
   # coin
-  coins = pg.sprite.Group()
-  coin = Coin(3*18, 5*18)
+  coins = SpriteGroup()
+  coin = Coin((54, 90))
   coins.add(coin)
 
   running = True
@@ -80,6 +84,7 @@ def main():
 
     player.handle_input(pg.key.get_pressed())
     player.update(dt)
+    camera.update(player)
     coin.update(dt)
 
     # check collisions
@@ -103,9 +108,11 @@ def main():
     if coll_object:
        print(coll_object)
        coll_object.kill()
+       pg.mixer.Sound.play(resources.sounds["pickup"])
        del coll_object
 
-    player_group.draw(screen)
+    coins.draw(screen)
+    player.draw_with_offset(screen)
 
     pg.display.flip()
 

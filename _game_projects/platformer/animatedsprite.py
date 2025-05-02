@@ -7,6 +7,7 @@ class AnimatedSprite(pg.sprite.Sprite):
   """
   def __init__(self, position=(0,0), inital_frames=None, frame_size=(24, 24)):
     super().__init__()
+    self.position = position
     self.rect = pg.Rect(position, frame_size)
 
     self.animations = {}
@@ -16,10 +17,11 @@ class AnimatedSprite(pg.sprite.Sprite):
     self.flip_h = False
     self.draw_offset = (0,0)
 
-    if inital_frames:
-      self.add_animation("default", inital_frames)
+    if not inital_frames:
+      raise("No initial animation frames!")
     
-    self.image = None
+    self.add_animation("default", inital_frames)
+    self.image = inital_frames[0]
 
 
   def add_animation(self, alias, animation_frames):
@@ -41,6 +43,8 @@ class AnimatedSprite(pg.sprite.Sprite):
 
   def update(self, dt):
     self._animate(dt)
+    orig_image : pg.Surface = self.animations[self.current_animation][self.current_frame]
+    self.image = pg.transform.flip(orig_image, self.flip_h, False)
 
 
   def _animate(self, dt):
@@ -53,7 +57,7 @@ class AnimatedSprite(pg.sprite.Sprite):
         self.current_frame = 0
 
 
-  def draw(self, screen):
-    orig_image : pg.Surface = self.animations[self.current_animation][self.current_frame]
-    self.image = pg.transform.flip(orig_image, self.flip_h, False)
-    #screen.blit(self.image,  self.rect.move(self.draw_offset))
+  def draw_with_offset(self, screen):
+    # orig_image : pg.Surface = self.animations[self.current_animation][self.current_frame]
+    # self.image = pg.transform.flip(orig_image, self.flip_h, False)
+    screen.blit(self.image,  self.rect.move(self.draw_offset))

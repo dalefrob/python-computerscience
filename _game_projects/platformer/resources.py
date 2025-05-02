@@ -11,7 +11,8 @@ def load():
     global images, sounds, other
     images["fg-tileset"] = pygame.image.load(os.path.join(current_dir, "assets/tilemap_packed.png")).convert_alpha()
     images["characters"] = pygame.image.load(os.path.join(current_dir, "assets/tilemap-characters_packed.png")).convert_alpha()
-
+    sounds["jump"] = pygame.mixer.Sound(os.path.join(current_dir, "assets/jump1.ogg"))
+    sounds["pickup"] = pygame.mixer.Sound(os.path.join(current_dir, "assets/pickup1.ogg"))
     other["tileset_data"] = load_tileset_data_json(os.path.join(current_dir, "assets/tileset_data.json"))
 
 def load_tileset_data_json(tileset_json_path):
