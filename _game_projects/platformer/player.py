@@ -7,7 +7,7 @@ GRAVITY = 16.0
 
 class Player(AnimatedSprite):
   def __init__(self, x, y, *groups):
-    super().__init__(*groups)
+    super().__init__((x, y))
     self.position = pg.Vector2(x, y)
     self.velocity = pg.Vector2(0, 0)
     self.speed = 30.0
@@ -15,7 +15,6 @@ class Player(AnimatedSprite):
 
     self.rect.size = (18,18)
     self.draw_offset = (-2,-4)
-    
 
 
   def update(self, dt):

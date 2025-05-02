@@ -18,6 +18,8 @@ class AnimatedSprite(pg.sprite.Sprite):
 
     if inital_frames:
       self.add_animation("default", inital_frames)
+    
+    self.image = None
 
 
   def add_animation(self, alias, animation_frames):
@@ -53,5 +55,5 @@ class AnimatedSprite(pg.sprite.Sprite):
 
   def draw(self, screen):
     orig_image : pg.Surface = self.animations[self.current_animation][self.current_frame]
-    image = pg.transform.flip(orig_image, self.flip_h, False)
-    screen.blit(image,  self.rect.move(self.draw_offset))
+    self.image = pg.transform.flip(orig_image, self.flip_h, False)
+    #screen.blit(self.image,  self.rect.move(self.draw_offset))

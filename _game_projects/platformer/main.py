@@ -43,7 +43,7 @@ class Game:
 def main():
   pg.init()
   flags = pg.SCALED
-  screen = pg.display.set_mode((400, 400), flags)
+  screen = pg.display.set_mode((320, 280), flags)
   pg.display.set_caption("World Map!")
 
   clock = pg.time.Clock()
@@ -64,9 +64,12 @@ def main():
   player.add_animation("default", load_animation_frames(player_spritesheet, 0, 0, 24, 1))
   player.add_animation("walk", load_animation_frames(player_spritesheet, 0, 0, 24, 2))
   player.add_animation("jump", load_animation_frames(player_spritesheet, 24, 0, 24, 1))
+  player_group = pg.sprite.GroupSingle(player)
 
   # coin
-  coin = Coin(200, 200)
+  coins = pg.sprite.Group()
+  coin = Coin(3*18, 5*18)
+  coins.add(coin)
 
   running = True
   while running:
@@ -95,8 +98,14 @@ def main():
              player.on_ground = True 
           player.velocity.y = 0
     
-    player.draw(screen)
-    coin.draw(screen)
+    # coin collision
+    coll_object : Coin = pg.sprite.spritecollideany(player, coins)
+    if coll_object:
+       print(coll_object)
+       coll_object.kill()
+       del coll_object
+
+    player_group.draw(screen)
 
     pg.display.flip()
 
