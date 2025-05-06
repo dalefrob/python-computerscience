@@ -67,3 +67,16 @@ print("List comprehension (upperfruits):", upperfruits)
 
 lessfivelist = [x for x in range(10) if x < 5]
 print("List comprehension (newlist):", lessfivelist)
+
+numlist = list(range(20))
+first, second, *other = numlist
+skips = numlist[::2]
+print(other)
+
+def mulitply(*numbers):
+  ans = numbers[0]
+  for i in numbers[1::]:
+    ans *= i
+  return ans
+
+print(mulitply(2,2,2,2))
