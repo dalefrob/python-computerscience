@@ -1,10 +1,11 @@
 # Lesson 7 -
-# Split screen and cameras
+# Game screens - Menu and Game
 
 import pygame
 import sys
 import os
 from math import *
+from gamescreen import ScreenManager, Screen, Button
 
 # Constants - unchanging values
 TILESIZE = 128
@@ -23,10 +24,14 @@ class Car(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.name = name
         self.position = pygame.Vector2(x, y)
+
         self.orig_image = surface
+        self.image = self.orig_image
+        
         self.original_pivot = [39/4, 65/4]
 
         self.collision_rect = pygame.Rect(x, y, 20, 20)
+        self.rect = self.collision_rect
 
         self.max_speed = 10.0
         self.speed = 0.0
@@ -149,21 +154,16 @@ coll_rects = list()
 coll_rects.append(middle_rect)
 
 
-# Initalize
-pygame.init()
-screen = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
-clock = pygame.time.Clock()
-# Fonts for text
-font = pygame.font.SysFont(None, 48)
 
-# Cars
-car_group = pygame.sprite.Group()
-car_start = pygame.Vector2(4 * TILESIZE, 2 * TILESIZE) + \
-    pygame.Vector2(TILESIZE / 2)
-car1_surf = pygame.image.load(dir_path + "/assets/car_red_small_5.png")
-car2_surf = pygame.image.load(dir_path + "/assets/car_green_small_5.png")
-car1 = Car("Red", car_start.x+20, car_start.y, pi/2, car1_surf, car_group)
-car2 = Car("Green", car_start.x-20, car_start.y, pi/2, car2_surf, car_group)
+
+# # Cars
+# car_group = pygame.sprite.Group()
+# car_start = pygame.Vector2(4 * TILESIZE, 2 * TILESIZE) + \
+#     pygame.Vector2(TILESIZE / 2)
+# car1_surf = pygame.image.load(dir_path + "/assets/car_red_small_5.png")
+# car2_surf = pygame.image.load(dir_path + "/assets/car_green_small_5.png")
+# car1 = Car("Red", car_start.x+20, car_start.y, pi/2, car1_surf, car_group)
+# car2 = Car("Green", car_start.x-20, car_start.y, pi/2, car2_surf, car_group)
 
 # Different inputs for different players
 car1_keybinds = [
@@ -194,93 +194,166 @@ def end_race(winning_car):
     is_racing = False
 
 
-is_racing = True
-winner = None
+# Initalize
+pygame.init()
+screen = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
+clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 48)
 
 # Camera view sizes (you can adjust this as needed)
 CAMERA_WIDTH, CAMERA_HEIGHT = TILESIZE * 3, TILESIZE * 3
-
 # Create "windowed" camera surfaces
 p1_view = pygame.Surface((CAMERA_WIDTH, CAMERA_HEIGHT))
 p2_view = pygame.Surface((CAMERA_WIDTH, CAMERA_HEIGHT))
 
-game_running = True
-while game_running == True:
-    dt = min(clock.tick(60) / 1000.0, 0.05)
 
-    game_canvas.fill(GRASS_GREEN)
+class MenuScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        self.startbutton = Button(SCREENWIDTH /2, (SCREENHEIGHT / 2) + 50, 100, 40, font, "Start", lambda: self.manager.change_screen("game"))
 
-    draw_course(game_canvas)
+    def update(self, dt):
+        self.startbutton.update()
 
-    # Debug draw checkpoints
-    for chk in checkpoints:
-        pygame.draw.line(game_canvas, (255, 255, 0), chk[0], chk[1], 1)
+    def render(self, surface : pygame.Surface):
+        surface.fill(GRASS_GREEN)
+        self.startbutton.render(surface)
+        text_surface = font.render(f"Super Python Car Racer!", True, "white")
+        text_rect = text_surface.get_rect(center=(SCREENWIDTH/2, SCREENHEIGHT/2))
+        surface.blit(text_surface, text_rect)
 
-    # AABB for overlaps
-    for car in [car1, car2]:
-        # Checkpoints
-        line = checkpoints[car.current_checkpoint]
-        intersect = car.collision_rect.clipline(line[0], line[1])
-        if intersect:
-            print("Checkpoint reached!")
-            car.current_checkpoint += 1
-            if car.current_checkpoint >= len(checkpoints):
-                car.current_checkpoint = 0
-                car.lap += 1
-                if car.lap > MAXLAPS:
-                    end_race(car)
+    def on_enter(self):
+        """ Called when the screen is switched to """
+        pass
 
-        # Collision
+    def on_exit(self):
+        """ Called when the screen is switched away from """
+        pass
+
+
+class GameScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        self.car_group = None
+        self.car1 = None
+        self.car2 = None
+        self.is_racing = True
+        self.winner = None
+
+    def update(self, dt):
+        # AABB for overlaps
+        for car in [self.car1, self.car2]:
+            line = checkpoints[car.current_checkpoint]
+            intersect = car.collision_rect.clipline(line[0], line[1])
+            if intersect:
+                print("Checkpoint reached!")
+                car.current_checkpoint += 1
+                if car.current_checkpoint >= len(checkpoints):
+                    car.current_checkpoint = 0
+                    car.lap += 1
+                    if car.lap > MAXLAPS:
+                        self.end_race(car)
+
+        # Collision detection
         for cr in coll_rects:
             penetration = aabb_collision_check(car.collision_rect, cr)
             if penetration:
                 car.position += penetration
                 car.speed *= 0.85
+        
+        # Car collision
+        car_hit = aabb_collision_check(self.car1.collision_rect, self.car2.collision_rect)
+        if car_hit:
+            self.car1.position += car_hit * 2.0
+            self.car2.position += -car_hit * 2.0
+            self.car1.speed = 0
+            self.car2.speed = 0
 
-    # Simple car hit
-    car_hit = aabb_collision_check(car1.collision_rect, car2.collision_rect)
-    if car_hit:
-        car1.position += car_hit * 2.0
-        car2.position += -car_hit * 2.0
-        car1.speed = 0
-        car2.speed = 0
+        # Input if the race is active
+        if self.is_racing:
+            self.car1.do_input(dt, car1_keybinds)
+            self.car2.do_input(dt, car2_keybinds)
 
-    # Don't allow inputs if the race isnt going
-    if is_racing:
-        car1.do_input(dt, car1_keybinds)
-        car2.do_input(dt, car2_keybinds)
+        # Update the car group
+        self.car_group.update(dt)
 
-    car_group.update(dt)
+        # Update camera positions
+        p1_camera.center = self.car1.position
+        p1_camera.clamp_ip(game_canvas.get_rect())
+        p2_camera.center = self.car2.position
+        p2_camera.clamp_ip(game_canvas.get_rect())
 
-    # Update camera positions and constrain to world
-    p1_camera.center = car1.position
-    p1_camera.clamp_ip(game_canvas.get_rect())
-    p2_camera.center = car2.position
-    p2_camera.clamp_ip(game_canvas.get_rect())
 
-    car_group.draw(game_canvas)
+    def end_race(self, winning_car):
+        print(f"{winning_car.name} is the winner!")
+        self.winner = winning_car
+        self.is_racing = False
 
-    if winner and not is_racing:
-        # Turn off acceleration
-        for car in [car1, car2]:
-            car.accerating = False
-        text_surface = font.render(
-            f"{winner.name} is the winner!", True, "white")
-        text_rect = text_surface.get_rect(
-            center=(SCREENWIDTH/2, SCREENHEIGHT/2))
-        screen.blit(text_surface, text_rect)
 
-    # Blit only the camera's view to the smaller surfaces
-    p1_view.blit(game_canvas, (0, 0), p1_camera)
-    p2_view.blit(game_canvas, (0, 0), p2_camera)
+    def render(self, surface : pygame.Surface):
+        game_canvas.fill(GRASS_GREEN)
+        draw_course(game_canvas)
 
-    # Now blit the smaller surfaces to the main screen
-    screen.blit(p1_view, (0, 0))
-    screen.blit(p2_view, (CAMERA_WIDTH, 0))
+        # Debug draw checkpoints
+        for chk in checkpoints:
+            pygame.draw.line(game_canvas, (255, 255, 0), chk[0], chk[1], 1)
+        
+        self.car_group.draw(game_canvas)
 
-    # Draw a line between the camera views
-    pygame.draw.line(screen, (0, 0, 0), (CAMERA_WIDTH, 0),
-                     (CAMERA_WIDTH, CAMERA_HEIGHT), 3)
+        # Blit only the camera's view to the smaller surfaces
+        p1_view.blit(game_canvas, (0, 0), p1_camera)
+        p2_view.blit(game_canvas, (0, 0), p2_camera)
+
+        # Now blit the smaller surfaces to the main screen
+        surface.blit(p1_view, (0, 0))
+        surface.blit(p2_view, (CAMERA_WIDTH, 0))
+
+        # Draw a line between the camera views
+        pygame.draw.line(surface, (0, 0, 0), (CAMERA_WIDTH, 0),
+                        (CAMERA_WIDTH, CAMERA_HEIGHT), 3)
+        
+        if self.winner and not self.is_racing:
+            # Turn off acceleration
+            for car in [self.car1, self.car2]:
+                car.accerating = False
+            text_surface = font.render(f"{self.winner.name} is the winner!", True, "white")
+            text_rect = text_surface.get_rect(center=(SCREENWIDTH/2, SCREENHEIGHT/2))
+            surface.blit(text_surface, text_rect)
+
+
+    def on_enter(self):
+        """ Called when the screen is switched to """
+        print("Entering Game Screen...")
+
+        # Initialize cars and car group
+        self.car_group = pygame.sprite.Group()
+        car_start = pygame.Vector2(4 * TILESIZE, 2 * TILESIZE) + pygame.Vector2(TILESIZE / 2)
+        
+        car1_surf = pygame.image.load(dir_path + "/assets/car_red_small_5.png")
+        car2_surf = pygame.image.load(dir_path + "/assets/car_green_small_5.png")
+        
+        self.car1 = Car("Red", car_start.x + 20, car_start.y, pi/2, car1_surf, self.car_group)
+        self.car2 = Car("Green", car_start.x - 20, car_start.y, pi/2, car2_surf, self.car_group)
+
+        # Reset race state
+        self.is_racing = True
+        self.winner = None
+        print(self.car_group)
+
+
+    def on_exit(self):
+        """ Called when the screen is switched away from """
+        pass
+
+
+screen_manager = ScreenManager(None, "menu", MenuScreen())
+screen_manager.add_screen("game", GameScreen())
+
+game_running = True
+while game_running == True:
+    dt = min(clock.tick(60) / 1000.0, 0.05)
+    screen_manager.update(dt)
+    screen_manager.render(screen)
 
     pygame.display.flip()
 
