@@ -1,127 +1,194 @@
 import pygame as pg
-import os
-from camera import Camera
-from coin import Coin
-from game_utils import *
-from player import Player
-import resources
-from spritegroup import SpriteGroup
-from tilemap import *
+from pygame.locals import *
+import sys
 
+SCREEN_WIDTH = 320
+SCREEN_HEIGHT = 240
 FPS = 60
 
-# Construct the path dynamically
-current_dir = os.path.dirname(__file__)
+SKYBLUE = (50, 100, 200)
 
-testmap = [
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0],
-  [0,0,3,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,1,0,0,0,3,5,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-  [3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,0],
-]
+tiles = [pg.Rect(600,150,50,50), pg.Rect(50,200,500,50), pg.Rect(200,150,50,50)]
 
-class Game:
-  def __init__(self):
-      # Initialize your game systems here
-      self.tilemap = Tilemap(...)  # Load your tilemap
-      self.player = Player(x=100, y=100, width=50, height=50, game=self)
+class PhysicsEntity():
+    def __init__(self, game, pos, size):
+        self.game = game
+        self.pos = pg.Vector2(pos)
+        self.size = size
+        self.velocity = [0,0]
+        self.speed = 50.0
+        self.on_floor = False
 
-  def update(self, dt):
-      # Update game systems (player, tilemap, etc.)
-      self.player.update()
-      
-  def draw(self, screen):
-      screen.fill("black")
-      self.tilemap.draw(screen)
-      self.player.draw(screen)
+    def rect(self):
+        return pg.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
+
+    def update(self, dt):
+        self.velocity[1] += 18.0 * dt
+        self.move(dt)
+
+    def move(self, dt):
+        frame_movement = (self.velocity[0], self.velocity[1])
+
+        self.pos[0] += frame_movement[0] * dt * self.speed # Where movement happens
+
+        collisions = collision_test(self.rect(), tiles)
+        if len(collisions) > 0:
+            for tile in collisions:
+                if frame_movement[0] > 0:
+                    self.pos[0] = tile.left - self.size[0]
+                if frame_movement[0] < 0:
+                    self.pos[0] = tile.right
+        
+        self.pos[1] += frame_movement[1]
+        collisions = collision_test(self.rect(), tiles)
+        if len(collisions) > 0:
+            for tile in collisions:
+                if frame_movement[1] > 0:
+                    self.pos[1] = tile.top - self.size[1]
+                    self.velocity[1] = 0
+                    self.on_floor = True
+                if frame_movement[1] < 0:
+                    self.pos[1] = tile.bottom
 
 
-
-def main():
-  pg.init()
-  pg.mixer.init()
-  flags = pg.SCALED
-  screen = pg.display.set_mode((320, 280), flags)
-  pg.display.set_caption("World Map!")
-
-  # camera
-  camera = Camera(320, 280)
-
-  clock = pg.time.Clock()
-  resources.load()
+    def render(self, surface):
+        pass
 
 
-  # load resources
-  player_spritesheet : pg.Surface = pg.image.load(os.path.join(current_dir, "assets/tilemap-characters_packed.png")).convert_alpha()
-  tileset_texture = pg.image.load(os.path.join(current_dir, "assets/tilemap_packed.png")).convert_alpha()
-
-  # initialize the map
-  tileset_data = Tileset.load_tileset_data_json(os.path.join(current_dir, "assets/tileset_data.json"))
-  tileset = Tileset(tileset_texture, tileset_data)
-  tilemap = Tilemap(tileset, testmap)
-
-  # init player
-  player = Player((50, 50), load_animation_frames(player_spritesheet, 0, 0, 24, 1))
-  player.add_animation("walk", load_animation_frames(player_spritesheet, 0, 0, 24, 2))
-  player.add_animation("jump", load_animation_frames(player_spritesheet, 24, 0, 24, 1))
-
-  # coin
-  coins = SpriteGroup()
-  coin = Coin((54, 90))
-  coins.add(coin)
-
-  running = True
-  while running:
-    dt = min(clock.tick(60) / 1000.0, 0.05)
-
-    screen.fill("black")
-    tilemap.draw(screen)
-
-    player.handle_input(pg.key.get_pressed())
-    player.update(dt)
-    camera.update(player)
-    coin.update(dt)
-
-    # check collisions
-    response = resolve_tilemap_collision(player.rect, tilemap)
-    if response:
-        push_vector, normal = response
-        # Move the player out of collision
-        player.rect.x += push_vector.x
-        player.rect.y += push_vector.y
-
-        # Cancel velocity in the direction of collision
-        if normal.x != 0:
-          player.velocity.x = 0
-        if normal.y != 0:
-          if normal.y < 0:
-             player.on_ground = True 
-          player.velocity.y = 0
+class Player(PhysicsEntity):
+    def __init__(self, game, pos, size):
+        super().__init__(game, pos, size)
+        self.surface = pg.Surface((16, 16))
+        self.surface.fill((255, 0, 0))
+        self.inputs = {
+            "right": False,
+            "left": False,
+            "up": False,
+            "down": False
+        }
+        
     
-    # coin collision
-    coll_object : Coin = pg.sprite.spritecollideany(player, coins)
-    if coll_object:
-       print(coll_object)
-       coll_object.kill()
-       pg.mixer.Sound.play(resources.sounds["pickup"])
-       del coll_object
+    def update(self, dt):
+        if self.inputs["right"]:
+            self.velocity[0] = 3
+        elif self.inputs["left"]:
+            self.velocity[0] = -3
+        else:
+            self.velocity[0] = 0
+        super().update(dt)
 
-    coins.draw(screen)
-    player.draw_with_offset(screen)
 
-    pg.display.flip()
+    def jump(self):
+        self.velocity[1] = -6
+        self.on_floor = False
 
-    for event in pg.event.get():
-      if event.type == pg.QUIT:
-        pg.quit()
-        running = False
 
+    def render(self, surface):
+        surface.blit(self.surface, self.rect())
+    
+
+    def handle_event(self, event):
+        if event.type == KEYDOWN:
+            if event.key == K_RIGHT:
+                self.inputs["right"] = True
+            if event.key == K_LEFT:
+                self.inputs["left"] = True
+            if event.key == K_UP:
+                self.inputs["up"] = True
+            if event.key == K_DOWN:
+                self.inputs["down"] = True
+            if event.key == K_SPACE and self.on_floor:
+                self.jump()
+        if event.type == KEYUP:
+            if event.key == K_RIGHT:
+                self.inputs["right"] = False
+            if event.key == K_LEFT:
+                self.inputs["left"] = False
+            if event.key == K_UP:
+                self.inputs["up"] = False
+            if event.key == K_DOWN:
+                self.inputs["down"] = False
+
+
+def collision_test(rect, tiles):
+    collisions = []
+    for tile in tiles:
+        if rect.colliderect(tile):
+            collisions.append(tile)
+    return collisions
+
+
+class Camera:
+    def __init__(self, width, height):
+        self.offset = pg.Vector2(0, 0)
+        self.width = width
+        self.height = height
+        self.camera_bounds = [0, 0, 10000, 10000]
+
+    def set_bounds(self, left, top, right, bottom):
+        self.camera_bounds[0] = left
+        self.camera_bounds[1] = top
+        self.camera_bounds[2] = right
+        self.camera_bounds[3] = bottom
+
+    def update(self, target):
+        # Center the camera on the target
+        self.offset.x = pg.math.clamp(target.rect().centerx - self.width // 2, self.camera_bounds[0], self.camera_bounds[2])
+        self.offset.y = pg.math.clamp(target.rect().centery - self.height // 2, 0, self.camera_bounds[3] - self.camera_bounds[1])
+
+
+
+class Game():
+    def __init__(self):
+        pg.init()
+        self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.clock = pg.time.Clock()
+        self.running = True
+        self.player = Player(self, (50, 10), (16, 16))
+        self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.camera.set_bounds(0, 0, 2000, 0)
+    
+    def run(self):
+        while self.running:
+            dt = self.clock.tick(FPS) / 1000  # Convert milliseconds to seconds
+            # update
+            self.player.update(dt)
+            self.camera.update(self.player)
+
+            # draw
+            self.render_world()
+
+            # events
+            events = pg.event.get()
+            for event in events:
+                if event.type == pg.QUIT:
+                    self.running = False
+                    pg.quit()
+                    sys.exit()
+                # player
+                self.player.handle_event(event)
+
+            pg.display.flip()
+    
+
+    def render_world(self):
+        self.screen.fill(SKYBLUE)
+
+        # Camera offset
+        offset_x, offset_y = self.camera.offset
+        
+        # Only draw tiles in view
+        for tile in tiles:
+            if tile.colliderect(pg.Rect(offset_x, offset_y, SCREEN_WIDTH, SCREEN_HEIGHT)):
+                # Apply camera offset
+                adjusted_tile = tile.move(-offset_x, -offset_y)
+                pg.draw.rect(self.screen, (255, 255, 0), adjusted_tile)
+
+        # Draw the player and apply the offset
+        adjusted_player_rect = self.player.rect().move(-offset_x, -offset_y)
+        self.screen.blit(self.player.surface, adjusted_player_rect)
 
 
 if __name__ == "__main__":
-  main()
+    game = Game()
+    game.run()

@@ -1,5 +1,7 @@
 # Lesson 7 -
 # Game screens - Menu and Game
+# Timer
+# Custom event
 
 import pygame
 import sys
@@ -12,11 +14,28 @@ TILESIZE = 128
 SCREENWIDTH = TILESIZE * 6
 SCREENHEIGHT = TILESIZE * 3
 GRASS_GREEN = (30, 150, 50)
-MAXLAPS = 3
+MAXLAPS = 1
 
 game_canvas = pygame.Surface((TILESIZE * 5, TILESIZE * 5))
 p1_camera = pygame.Rect(0, 0, TILESIZE * 3, TILESIZE * 3)
 p2_camera = pygame.Rect(0, 0, TILESIZE * 3, TILESIZE * 3)
+
+GAME_WON = pygame.USEREVENT + 1
+
+
+class Timer:
+    def __init__(self, delay, callback):
+        self.end_time = pygame.time.get_ticks() + delay
+        self.callback = callback
+        self.finished = False
+        timers.append(self)
+    
+    def update(self):
+        if not self.finished and pygame.time.get_ticks() >= self.end_time:
+            self.callback()
+            self.finished = True
+            timers.remove(self)
+
 
 
 class Car(pygame.sprite.Sprite):
@@ -65,7 +84,7 @@ class Car(pygame.sprite.Sprite):
     def do_input(self, dt, keybinds):
         key = pygame.key.get_pressed()
         if key[keybinds[0]]:
-            self.speed = max(self.speed + 0.5, self.max_speed)
+            self.speed = max(self.speed + 1, self.max_speed)
             self.accerating = True
         elif key[keybinds[1]]:
             self.speed = max(self.speed - 1, -self.max_speed * 0.75)
@@ -84,16 +103,12 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 car_image = pygame.image.load(dir_path + "/assets/car_red_small_5.png")
 track_pieces = {
     1: pygame.image.load(dir_path + "/assets/road_asphalt01.png"),  # vertical
-    # horizontal
-    2: pygame.image.load(dir_path + "/assets/road_asphalt02.png"),
+    2: pygame.image.load(dir_path + "/assets/road_asphalt02.png"),  # horizontal
     3: pygame.image.load(dir_path + "/assets/road_asphalt03.png"),  # topleft
     5: pygame.image.load(dir_path + "/assets/road_asphalt05.png"),  # topright
-    # bottomleft
-    39: pygame.image.load(dir_path + "/assets/road_asphalt39.png"),
-    # bottomright
-    41: pygame.image.load(dir_path + "/assets/road_asphalt41.png"),
-    # verticalstart
-    42: pygame.image.load(dir_path + "/assets/road_asphalt42.png"),
+    39: pygame.image.load(dir_path + "/assets/road_asphalt39.png"), # bottomleft
+    41: pygame.image.load(dir_path + "/assets/road_asphalt41.png"), # bottomright
+    42: pygame.image.load(dir_path + "/assets/road_asphalt42.png"), # verticalstart
 }
 
 
@@ -187,13 +202,6 @@ checkpoints = [
 ]
 
 
-def end_race(winning_car):
-    global winner, is_racing
-    print(f"{winning_car.name} is the winner!")
-    winner = winning_car
-    is_racing = False
-
-
 # Initalize
 pygame.init()
 screen = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
@@ -251,7 +259,7 @@ class GameScreen(Screen):
                 if car.current_checkpoint >= len(checkpoints):
                     car.current_checkpoint = 0
                     car.lap += 1
-                    if car.lap > MAXLAPS:
+                    if car.lap > MAXLAPS and not self.winner:
                         self.end_race(car)
 
         # Collision detection
@@ -288,7 +296,12 @@ class GameScreen(Screen):
         print(f"{winning_car.name} is the winner!")
         self.winner = winning_car
         self.is_racing = False
+        timer = Timer(2000, lambda: pygame.event.post(pygame.event.Event(GAME_WON)))
 
+    def handle_events(self, events):
+        for e in events:
+            if e.type == GAME_WON:
+                screen_manager.change_screen("menu")
 
     def render(self, surface : pygame.Surface):
         game_canvas.fill(GRASS_GREEN)
@@ -348,17 +361,24 @@ class GameScreen(Screen):
 
 screen_manager = ScreenManager(None, "menu", MenuScreen())
 screen_manager.add_screen("game", GameScreen())
+timers = []
 
 game_running = True
 while game_running == True:
-    dt = min(clock.tick(60) / 1000.0, 0.05)
-    screen_manager.update(dt)
-    screen_manager.render(screen)
+    for timer in timers[:]: # creates a shallow copy of the list
+        timer.update()
 
-    pygame.display.flip()
+    dt = min(clock.tick(60) / 1000.0, 0.05) # delta time to have a consistent frame rate
 
-    for event in pygame.event.get():
+    events = pygame.event.get()
+    for event in events:
         if event.type == pygame.QUIT:
             game_running = False
             pygame.quit()
             sys.exit()
+    
+    screen_manager.handle_events(events)
+    screen_manager.update(dt)
+    screen_manager.render(screen)
+
+    pygame.display.flip()

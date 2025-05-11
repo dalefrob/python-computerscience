@@ -10,6 +10,9 @@ class Screen():
     def render(self, surface):
         pass
 
+    def handle_events(self, events):
+       pass
+
     def on_enter(self):
         """ Called when the screen is switched to """
         pass
@@ -41,6 +44,9 @@ class ScreenManager():
 
     def render(self, surface):
         self.current_screen.render(surface)
+    
+    def handle_events(self, events):
+       self.current_screen.handle_events(events)
 
     def change_screen(self, screen_name: str) -> bool:
         if screen_name in self._screens:
