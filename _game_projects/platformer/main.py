@@ -51,22 +51,42 @@ class PhysicsEntity():
                     self.pos[1] = tile.bottom
 
 
-    def render(self, surface):
-        pass
+    def render(self, surface, offset):
+        pg.draw.rect(surface, (255, 0, 0), self.rect().move(-offset.x, -offset.y))
+
+
+path = "_game_projects/platformer/assets/Main Characters/Ninja Frog/Idle (32x32).png"
+path_run = "_game_projects/platformer/assets/Main Characters/Ninja Frog/Run (32x32).png"
+
+def load_animation_frames(imgpath, columns, rows):
+    frames = []
+    img = pg.image.load(imgpath).convert_alpha()
+    frame_width = img.width // columns
+    frame_height = img.height // rows
+    for f_y in range(rows):
+        for f_x in range(columns):
+            surf = img.subsurface(pg.Rect(frame_width * f_x, frame_height * f_y, frame_width, frame_height))
+            frames.append(surf)
+    return frames
 
 
 class Player(PhysicsEntity):
     def __init__(self, game, pos, size):
         super().__init__(game, pos, size)
-        self.surface = pg.Surface((16, 16))
-        self.surface.fill((255, 0, 0))
+        self.render_offset = [-4,0]
         self.inputs = {
             "right": False,
             "left": False,
             "up": False,
             "down": False
         }
-        
+        # animation
+        self.idle_frames = load_animation_frames(path, 11, 1)
+        self.run_frames = load_animation_frames(path_run, 12, 1)
+        self.current_animation = self.idle_frames
+        self.last_update = 0
+        self.frame_index = 0
+    
     
     def update(self, dt):
         if self.inputs["right"]:
@@ -76,15 +96,25 @@ class Player(PhysicsEntity):
         else:
             self.velocity[0] = 0
         super().update(dt)
+        # Call anim every 0.5
+        now = pg.time.get_ticks()
+        if now - self.last_update > 60:  # 700 ms
+            self.animate(dt)
+            self.last_update = now  # Reset the timer
 
 
     def jump(self):
         self.velocity[1] = -6
         self.on_floor = False
 
+    def animate(self, dt):
+        self.frame_index += 1
+        if self.frame_index > len(self.current_animation) - 1:
+            self.frame_index = 0
 
-    def render(self, surface):
-        surface.blit(self.surface, self.rect())
+    def render(self, surface, offset):
+        adjusted_rect = self.rect().move(-offset.x + self.render_offset[0], -offset.y + self.render_offset[1])
+        surface.blit(self.current_animation[self.frame_index], adjusted_rect)
     
 
     def handle_event(self, event):
@@ -144,7 +174,7 @@ class Game():
         self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pg.time.Clock()
         self.running = True
-        self.player = Player(self, (50, 10), (16, 16))
+        self.player = Player(self, (50, 10), (24, 32))
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.camera.set_bounds(0, 0, 2000, 0)
     
@@ -185,8 +215,7 @@ class Game():
                 pg.draw.rect(self.screen, (255, 255, 0), adjusted_tile)
 
         # Draw the player and apply the offset
-        adjusted_player_rect = self.player.rect().move(-offset_x, -offset_y)
-        self.screen.blit(self.player.surface, adjusted_player_rect)
+        self.player.render(self.screen, self.camera.offset)
 
 
 if __name__ == "__main__":
