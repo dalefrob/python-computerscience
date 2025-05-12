@@ -54,6 +54,6 @@ class DealDamage(SpellEffect):
 ### SPELLS
 
 all_spells = {
-  "fireball" : Spell("Fireball", 10, [DealDamage(5, element=Elements.FIRE)]),
-  "shock": Spell("Shock", num_targets=3, effects=[DealDamage(1, Elements.AIR)])
+  "fireball" : Spell("Fireball 🔥", 10, [DealDamage(5, element=Elements.FIRE)]),
+  "shock": Spell("Shock ⚡", num_targets=3, effects=[DealDamage(1, Elements.AIR)])
 }

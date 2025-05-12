@@ -18,9 +18,9 @@ def setup():
   """
   Called once before the simluation starts to set things up
   """
-  blokes.append(Bloke("Dale"))
-  blokes.append(Bloke("Orion"))
-  blokes.append(Bloke("Brad"))
+  blokes.append(Bloke("Ching"))
+  blokes.append(Bloke("Ryan"))
+  blokes.append(Bloke("Cindy"))
 
   bloke : Bloke
   for bloke in blokes:
