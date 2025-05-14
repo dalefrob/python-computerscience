@@ -44,6 +44,7 @@ class PhysicsEntity():
     def move(self, dt):
         # reset collision test
         self.on_wall = False
+        self.on_floor = False
 
         # Update position based on velocity, delta time, and speed
         self.pos[0] += self.velocity[0] * dt * self.speed
@@ -62,7 +63,7 @@ class PhysicsEntity():
         for tile in collision_test(self.rect(), tiles):
             if self.velocity[1] > 0:
                 self.pos[1] = tile.top - self.size[1]
-                self.velocity[1] = 0
+                self.velocity[1] = 1 # IMPORTANT!!! --- Set this to 1 so that the character tries to collide with the ground next frame!
                 self.on_floor = True
             elif self.velocity[1] < 0:
                 self.pos[1] = tile.bottom
