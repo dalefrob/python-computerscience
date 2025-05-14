@@ -9,6 +9,10 @@ FPS = 60
 
 SKYBLUE = (50, 100, 200)
 
+pg.font.init() # you have to call this at the start, 
+                   # if you want to use this module.
+my_font = pg.font.SysFont('Comic Sans MS', 12)
+
 
 # resources
 path = os.path.dirname(__file__)
@@ -34,38 +38,34 @@ class PhysicsEntity():
         return pg.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
 
     def update(self, dt):
-        self.velocity[1] += 18.0 * dt
-        self.move(dt)
+        self.velocity[1] += 18.0 * dt # Add gravity
+        self.move(dt) # try to move
 
     def move(self, dt):
-        if self.velocity.magnitude_squared() == 0:
-            return
         # reset collision test
         self.on_wall = False
 
-        frame_movement = (self.velocity[0], self.velocity[1])
-        self.pos[0] += frame_movement[0] * dt * self.speed # Where movement happens
+        # Update position based on velocity, delta time, and speed
+        self.pos[0] += self.velocity[0] * dt * self.speed
 
-        collisions = collision_test(self.rect(), tiles)
-        if len(collisions) > 0:
-            for tile in collisions:
-                if frame_movement[0] > 0:
-                    self.pos[0] = tile.left - self.size[0]
-                    self.on_wall = True
-                if frame_movement[0] < 0:
-                    self.pos[0] = tile.right
-                    self.on_wall = True
-        
-        self.pos[1] += frame_movement[1]
-        collisions = collision_test(self.rect(), tiles)
-        if len(collisions) > 0:
-            for tile in collisions:
-                if frame_movement[1] > 0:
-                    self.pos[1] = tile.top - self.size[1]
-                    self.velocity[1] = 0
-                    self.on_floor = True
-                if frame_movement[1] < 0:
-                    self.pos[1] = tile.bottom
+        # Check for horizontal collisions
+        for tile in collision_test(self.rect(), tiles):
+            if self.velocity[0] > 0:
+                self.pos[0] = tile.left - self.size[0]
+            elif self.velocity[0] < 0:
+                self.pos[0] = tile.right
+            self.on_wall = True
+
+        # Update vertical position
+        self.pos[1] += self.velocity[1] * dt * self.speed
+        # Check for vertical collisions
+        for tile in collision_test(self.rect(), tiles):
+            if self.velocity[1] > 0:
+                self.pos[1] = tile.top - self.size[1]
+                self.velocity[1] = 0
+                self.on_floor = True
+            elif self.velocity[1] < 0:
+                self.pos[1] = tile.bottom
 
 
     def render(self, surface, offset):
@@ -85,14 +85,24 @@ def load_animation_frames(imgpath, columns, rows):
 
 
 class Enemy(PhysicsEntity):
+    IDLE = 0
+    RUN = 1
+    HIT = 2
+
     def __init__(self, game, pos, size):
         super().__init__(game, pos, size)
         self.render_offset = [-3,0]
+        # states
+        self.current_state = self.IDLE
+
+        # animation setup
         idle = path + "/assets/Enemies/Mushroom/Idle (32x32).png"
         run = path + "/assets/Enemies/Mushroom/Run (32x32).png"
+        hit = path + "/assets/Enemies/Mushroom/Hit.png"
         self.animations = {
             "idle": load_animation_frames(idle, 14, 1),
-            "run": load_animation_frames(run, 16, 1)
+            "run": load_animation_frames(run, 16, 1),
+            "hit": load_animation_frames(hit, 5, 1)
         }
         self.current_animation = "run"
         self.last_update = 0
@@ -155,6 +165,7 @@ class Player(PhysicsEntity):
     
     
     def update(self, dt):
+        super().update(dt)
         # horizontal logic
         if self.inputs["right"]:
             self.direction = 1
@@ -168,7 +179,6 @@ class Player(PhysicsEntity):
                 self.change_animation("run")
         elif self.inputs["left"] + self.inputs["right"] == 0:
             self.velocity[0] = 0
-            self.change_animation("idle")
 
         # vertical logic
         if not self.on_floor:
@@ -176,8 +186,9 @@ class Player(PhysicsEntity):
                 self.change_animation("fall")
             else:
                 self.change_animation("jump")
-
-        super().update(dt)
+        else:
+            if self.velocity[0] == 0:
+                self.change_animation("idle")
 
         # animate frames
         now = pg.time.get_ticks()
@@ -185,13 +196,14 @@ class Player(PhysicsEntity):
             self.animate(dt)
             self.last_update = now  # Reset the timer
 
+
     def change_animation(self, next_animation_name):
         if self.current_animation != next_animation_name:
             self.frame_index = 0
             self.current_animation = next_animation_name
 
     def jump(self):
-        self.velocity[1] = -6
+        self.velocity[1] = -7
         self.on_floor = False
 
     def animate(self, dt):
@@ -205,6 +217,9 @@ class Player(PhysicsEntity):
             surface.blit(pg.transform.flip(self.animations[self.current_animation][self.frame_index], True, False), adjusted_rect)
         else:
             surface.blit(self.animations[self.current_animation][self.frame_index], adjusted_rect)
+        
+        text_surface = my_font.render(f"vel: {self.velocity}", False, (0, 0, 0))
+        surface.blit(text_surface, (0,0))
     
 
     def handle_event(self, event):
@@ -261,7 +276,7 @@ class Game():
     def __init__(self):
         pg.init()
         flags = pg.SCALED
-        self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags)
+        self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pg.time.Clock()
         self.running = True
         self.player = Player(self, (50, 10), (24, 32))
@@ -269,7 +284,7 @@ class Game():
         self.camera.set_bounds(0, 0, 2000, 0)
         self.entities = []
         enemy = Enemy(self, (300, 10), (26, 32))
-        self.entities.append(enemy)
+        # self.entities.append(enemy)
     
     def run(self):
         while self.running:
