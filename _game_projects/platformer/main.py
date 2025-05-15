@@ -33,6 +33,7 @@ class PhysicsEntity():
         self.speed = 50.0
         self.on_floor = False
         self.on_wall = False
+        self.last_collisions = []
 
     def rect(self):
         return pg.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
@@ -42,31 +43,35 @@ class PhysicsEntity():
         self.move(dt) # try to move
 
     def move(self, dt):
+        
+        new_pos = self.pos 
+
         # reset collision test
         self.on_wall = False
         self.on_floor = False
 
-        # Update position based on velocity, delta time, and speed
-        self.pos[0] += self.velocity[0] * dt * self.speed
-
         # Check for horizontal collisions
+        new_pos[0] += self.velocity[0] * dt * self.speed
         for tile in collision_test(self.rect(), tiles):
             if self.velocity[0] > 0:
-                self.pos[0] = tile.left - self.size[0]
+                new_pos[0] = tile.left - self.size[0]
             elif self.velocity[0] < 0:
-                self.pos[0] = tile.right
+                new_pos[0] = tile.right
             self.on_wall = True
-
-        # Update vertical position
-        self.pos[1] += self.velocity[1] * dt * self.speed
+        
         # Check for vertical collisions
+        new_pos[1] += self.velocity[1] * dt * self.speed
         for tile in collision_test(self.rect(), tiles):
             if self.velocity[1] > 0:
-                self.pos[1] = tile.top - self.size[1]
+                new_pos[1] = tile.top - self.size[1]
                 self.velocity[1] = 1 # IMPORTANT!!! --- Set this to 1 so that the character tries to collide with the ground next frame!
                 self.on_floor = True
             elif self.velocity[1] < 0:
-                self.pos[1] = tile.bottom
+                new_pos[1] = tile.bottom
+        
+        self.last_collisions = self.rect().collideobjectsall(game.entities)
+
+        self.pos = new_pos
 
 
     def render(self, surface, offset):
@@ -92,7 +97,7 @@ class Enemy(PhysicsEntity):
 
     def __init__(self, game, pos, size):
         super().__init__(game, pos, size)
-        self.render_offset = [-3,0]
+        self.render_offset = [-3,-6]
         # states
         self.current_state = self.IDLE
 
@@ -136,6 +141,9 @@ class Enemy(PhysicsEntity):
             surface.blit(pg.transform.flip(self.animations[self.current_animation][self.frame_index], True, False), adjusted_rect.move(self.render_offset[0], self.render_offset[1]))
         else:
             surface.blit(self.animations[self.current_animation][self.frame_index], adjusted_rect.move(self.render_offset[0], self.render_offset[1]))
+    
+    def __str__(self):
+        return "Mushroom"
 
 
 class Player(PhysicsEntity):
@@ -145,7 +153,7 @@ class Player(PhysicsEntity):
     """
     def __init__(self, game, pos, size):
         super().__init__(game, pos, size)
-        self.render_offset = [-4,0]
+        self.render_offset = [-4,-4]
         self.inputs = {
             "right": False,
             "left": False,
@@ -191,6 +199,12 @@ class Player(PhysicsEntity):
             if self.velocity[0] == 0:
                 self.change_animation("idle")
 
+        # entity collisions
+        if self.last_collisions:
+            for coll in self.last_collisions:
+                if isinstance(coll, Enemy):
+                    self.jump()
+
         # animate frames
         now = pg.time.get_ticks()
         if now - self.last_update > 60:  # 700 ms
@@ -213,14 +227,18 @@ class Player(PhysicsEntity):
             self.frame_index = 0
 
     def render(self, surface, offset):
-        adjusted_rect = self.rect().move(-offset.x + self.render_offset[0], -offset.y + self.render_offset[1])
+        adjusted_rect = self.rect().move(-offset.x, -offset.y)
         if self.direction == -1:
-            surface.blit(pg.transform.flip(self.animations[self.current_animation][self.frame_index], True, False), adjusted_rect)
+            surface.blit(pg.transform.flip(self.animations[self.current_animation][self.frame_index], True, False), adjusted_rect.move(self.render_offset[0], self.render_offset[1]))
         else:
-            surface.blit(self.animations[self.current_animation][self.frame_index], adjusted_rect)
+            surface.blit(self.animations[self.current_animation][self.frame_index], adjusted_rect.move(self.render_offset[0], self.render_offset[1]))
         
         text_surface = my_font.render(f"vel: {self.velocity}", False, (0, 0, 0))
         surface.blit(text_surface, (0,0))
+        #pg.draw.rect(surface, (0, 255, 0), adjusted_rect, 1)
+    
+    def __str__(self):
+        return "Player"
     
 
     def handle_event(self, event):
@@ -246,11 +264,11 @@ class Player(PhysicsEntity):
                 self.inputs["down"] = False
 
 
-def collision_test(rect, tiles):
+def collision_test(rect, list_rects):
     collisions = []
-    for tile in tiles:
-        if rect.colliderect(tile):
-            collisions.append(tile)
+    for r in list_rects:
+        if rect.colliderect(r):
+            collisions.append(r)
     return collisions
 
 
@@ -277,15 +295,15 @@ class Game():
     def __init__(self):
         pg.init()
         flags = pg.SCALED
-        self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags)
         self.clock = pg.time.Clock()
         self.running = True
-        self.player = Player(self, (50, 10), (24, 32))
+        self.player = Player(self, (50, 10), (24, 28))
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.camera.set_bounds(0, 0, 2000, 0)
         self.entities = []
-        enemy = Enemy(self, (300, 10), (26, 32))
-        # self.entities.append(enemy)
+        enemy = Enemy(self, (300, 10), (26, 26))
+        self.entities.append(enemy)
     
     def run(self):
         while self.running:
