@@ -1,4 +1,5 @@
 import pygame as pg
+import json
 from pathlib import Path
 
 path = Path(__file__).parent.resolve()
@@ -14,20 +15,23 @@ class Tilemap():
 
         # tiles
         self.tiles_atlas = load_tilesheet()
-        self.tiles = {}
-        self.tiles[(3,12)] = (0,0)
-        self.tiles[(4,12)] = (1,0)
-        self.tiles[(5,12)] = (1,0)
-        self.tiles[(6,12)] = (1,0)
-        self.tiles[(7,12)] = (1,0)
+        self.tiles = load_ldtk_map()
+        # self.tiles[(3,12)] = (0,0)
+        # self.tiles[(4,12)] = (1,0)
+        # self.tiles[(5,12)] = (1,0)
+        # self.tiles[(6,12)] = (1,0)
+        # self.tiles[(7,12)] = (1,0)
 
-        self.tiles[(5,8)] = (0,2)
+        # self.tiles[(5,8)] = (0,2)
 
-        self.tiles[(12,10)] = (0,0)
-        self.tiles[(13,10)] = (1,0)
+        # self.tiles[(12,10)] = (0,0)
+        # self.tiles[(13,10)] = (1,0)
 
-        self.render_coords = True
-        self.debug_rect = None
+        # Debug
+        self.render_coords = False
+        self.debug_rect = False
+
+        
     
 
     def get_neighbor_rects(self, map_coord, debug = False):
@@ -95,3 +99,18 @@ def load_tilesheet(tilesize = 16):
             subsurf = image.subsurface((col * tilesize, row * tilesize), (tilesize, tilesize))
             atlas[col, row] = subsurf
     return atlas
+
+
+def load_ldtk_map():
+    map_tiles = {}
+    json_path = path / "../assets/Maps/testmap/Level_0.ldtkl"
+    with open(json_path, "r") as read_file:
+        result = json.load(read_file)
+        grid_tiles = result['layerInstances'][0]['gridTiles']
+        for i in grid_tiles:
+            screen_coord = i["px"]
+            src_coord = i["src"] 
+            key = (screen_coord[0] // 16, screen_coord[1] // 16)
+            value = (src_coord[0] // 16, src_coord[1] // 16)
+            map_tiles[key] = value
+    return map_tiles

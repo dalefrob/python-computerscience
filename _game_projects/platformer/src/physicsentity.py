@@ -52,16 +52,7 @@ class PhysicsEntity():
 
         # get nearest tiles
         map_coord = self.game.tilemap.world_to_map(self.rect().move(self.velocity[0] * dt * self.speed, self.velocity[0] * dt * self.speed).center)
-        tile_rects = self.game.tilemap.get_neighbor_rects(map_coord, True)
-
-        # Check for horizontal collisions
-        self.pos[0] += self.velocity[0] * dt * self.speed
-        for tile in collision_test(self.rect(), tile_rects):   # OLD --- self.game.tiles
-            if self.velocity[0] > 0:
-                self.pos[0] = tile.left - self.size[0]
-            elif self.velocity[0] < 0:
-                self.pos[0] = tile.right
-            self.on_wall = True
+        tile_rects = self.game.tilemap.get_neighbor_rects(map_coord)
 
         # Check for vertical collisions
         self.pos[1] += self.velocity[1] * dt * self.speed
@@ -73,6 +64,15 @@ class PhysicsEntity():
             elif self.velocity[1] < 0:
                 self.pos[1] = tile.bottom
                 self.on_ceiling = True
+        
+        # Check for horizontal collisions
+        self.pos[0] += self.velocity[0] * dt * self.speed
+        for tile in collision_test(self.rect(), tile_rects):   # OLD --- self.game.tiles
+            if self.velocity[0] > 0:
+                self.pos[0] = tile.left - self.size[0]
+            elif self.velocity[0] < 0:
+                self.pos[0] = tile.right
+            self.on_wall = True 
 
         self.last_collisions = self.rect().collideobjectsall(self.game.entities)
 
