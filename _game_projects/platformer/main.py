@@ -36,7 +36,7 @@ class Game():
         pg.init()
         pg.font.init() # you have to call this at the start
         flags = pg.SCALED
-        self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags)
+        self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pg.time.Clock()
         self.running = True
         self.player = Player(self, (96, 96), (24, 28))

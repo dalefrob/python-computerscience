@@ -54,26 +54,47 @@ class PhysicsEntity():
         map_coord = self.game.tilemap.world_to_map(self.rect().move(self.velocity[0] * dt * self.speed, self.velocity[0] * dt * self.speed).center)
         tile_rects = self.game.tilemap.get_neighbor_rects(map_coord)
 
+        _new_pos = self.pos
+
+        # Move vertically
+        _test_rect = self.rect().move(0, self.velocity[1] * dt * self.speed)
+        
+        can_move = True
         # Check for vertical collisions
-        self.pos[1] += self.velocity[1] * dt * self.speed
-        for tile in collision_test(self.rect(), tile_rects):
+        for tile in collision_test(_test_rect, tile_rects):
+            assert isinstance(tile, pg.Rect)
             if self.velocity[1] > 0:
-                self.pos[1] = tile.top - self.size[1]
+                _new_pos[1] = tile.top - self.size[1]
                 self.velocity[1] = 1 # IMPORTANT!!! --- Set this to 1 so that the character tries to collide with the ground next frame!
                 self.on_floor = True
+                can_move = False
             elif self.velocity[1] < 0:
-                self.pos[1] = tile.bottom
+                _new_pos[1] = tile.bottom
                 self.on_ceiling = True
+                can_move = False
+        
+        if can_move:
+            _new_pos[1] += self.velocity[1] * dt * self.speed
+        
+        _test_rect = self.rect().move(self.velocity[0] * dt * self.speed, 0)
+        can_move = True
         
         # Check for horizontal collisions
-        self.pos[0] += self.velocity[0] * dt * self.speed
-        for tile in collision_test(self.rect(), tile_rects):   # OLD --- self.game.tiles
+        for tile in collision_test(_test_rect, tile_rects):   # OLD --- self.game.tiles
+            print("H Coll")
             if self.velocity[0] > 0:
-                self.pos[0] = tile.left - self.size[0]
+                _new_pos[0] = tile.left - self.size[0]
             elif self.velocity[0] < 0:
-                self.pos[0] = tile.right
-            self.on_wall = True 
+                _new_pos[0] = tile.right
+            self.on_wall = True
+            can_move = False
+            
 
+        # Move horizontally
+        if can_move:
+            _new_pos[0] += self.velocity[0] * dt * self.speed
+
+        self.pos = _new_pos
         self.last_collisions = self.rect().collideobjectsall(self.game.entities)
 
 

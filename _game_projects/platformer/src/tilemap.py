@@ -16,6 +16,10 @@ class Tilemap():
         # tiles
         self.tiles_atlas = load_tilesheet()
         self.tiles = load_ldtk_map()
+        # test
+        self.platforms = [(2,9), (3,9), (4,9)]
+
+
         # self.tiles[(3,12)] = (0,0)
         # self.tiles[(4,12)] = (1,0)
         # self.tiles[(5,12)] = (1,0)
@@ -30,8 +34,6 @@ class Tilemap():
         # Debug
         self.render_coords = False
         self.debug_rect = False
-
-        
     
 
     def get_neighbor_rects(self, map_coord, debug = False):
@@ -41,7 +43,7 @@ class Tilemap():
             #print(test_coord)
             if test_coord in self.tiles:
                 rect = pg.Rect(test_coord[0] * self.cell_size, test_coord[1] * self.cell_size, self.cell_size, self.cell_size)
-                rects.append(rect)
+                rects.append(rect) # Add whether its a platform or not
             if debug and len(rects) > 0:
                 dbrect = rects[0].copy()
                 self.debug_rect = dbrect.unionall(rects)
