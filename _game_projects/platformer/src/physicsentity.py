@@ -13,7 +13,8 @@ def collision_test(rect, list_rects):
 
 class PhysicsEntity():
     def __init__(self, game, pos, size):
-        self.game = game
+        from main import Game
+        self.game : Game = game
 
         # spatial vars
         self.pos = pg.Vector2(pos)
@@ -44,57 +45,62 @@ class PhysicsEntity():
         self.on_floor = False
         self.on_ceiling = False
 
+        dx = self.velocity[0] * dt * self.speed
+        dy = self.velocity[1] * dt * self.speed
+
         # No collisions, just move
         if self.disable_collision == True:
-            self.pos[0] += self.velocity[0] * dt * self.speed
-            self.pos[1] += self.velocity[1] * dt * self.speed
+            self.pos += pg.Vector2(dx, dy)
             return
 
         # get nearest tiles
-        map_coord = self.game.tilemap.world_to_map(self.rect().move(self.velocity[0] * dt * self.speed, self.velocity[0] * dt * self.speed).center)
+        map_coord = self.game.tilemap.world_to_map(self.rect().move(dx, dy).center)
         tile_rects = self.game.tilemap.get_neighbor_rects(map_coord)
+        
+        # TODO ---- Get the tiles according to the velocity of the player, not all in a set of 9
+
 
         _new_pos = self.pos
 
-        # Move vertically
-        _test_rect = self.rect().move(0, self.velocity[1] * dt * self.speed)
-        
-        can_move = True
-        # Check for vertical collisions
-        for tile in collision_test(_test_rect, tile_rects):
-            assert isinstance(tile, pg.Rect)
-            if self.velocity[1] > 0:
-                _new_pos[1] = tile.top - self.size[1]
-                self.velocity[1] = 1 # IMPORTANT!!! --- Set this to 1 so that the character tries to collide with the ground next frame!
-                self.on_floor = True
-                can_move = False
-            elif self.velocity[1] < 0:
-                _new_pos[1] = tile.bottom
-                self.on_ceiling = True
-                can_move = False
-        
-        if can_move:
-            _new_pos[1] += self.velocity[1] * dt * self.speed
-        
-        _test_rect = self.rect().move(self.velocity[0] * dt * self.speed, 0)
-        can_move = True
+        _test_rect = self.rect().move(dx, 0)
         
         # Check for horizontal collisions
-        for tile in collision_test(_test_rect, tile_rects):   # OLD --- self.game.tiles
-            print("H Coll")
+        for tile_rect in collision_test(_test_rect, tile_rects):   # OLD --- self.game.tiles
             if self.velocity[0] > 0:
-                _new_pos[0] = tile.left - self.size[0]
+                dx = 0
+                #_new_pos[0] = tile_rect.left - self.size[0]
             elif self.velocity[0] < 0:
-                _new_pos[0] = tile.right
+                dx = 0
+                #_new_pos[0] = tile_rect.right
             self.on_wall = True
-            can_move = False
             
 
         # Move horizontally
-        if can_move:
-            _new_pos[0] += self.velocity[0] * dt * self.speed
+        _new_pos[0] += dx
 
-        self.pos = _new_pos
+        # Move vertically
+        _test_rect = self.rect().move(0, dy)
+        
+        # Check for vertical collisions
+        for tile_rect in collision_test(_test_rect, tile_rects):
+            assert isinstance(tile_rect, pg.Rect)
+            penetration = {
+                "floor": _test_rect.bottom - tile_rect.top,
+                "ceiling": _test_rect.top - tile_rect.bottom
+            }
+            print(penetration)
+            if self.velocity[1] > 0:
+                dy = 0
+                #_new_pos[1] = tile.top - self.size[1]
+                self.velocity[1] = 1 # IMPORTANT!!! --- Set this to 1 so that the character tries to collide with the ground next frame!
+                self.on_floor = True
+            elif self.velocity[1] < 0:
+                dy = 0
+                #_new_pos[1] = tile.bottom
+                self.on_ceiling = True
+        
+        _new_pos[1] += dy
+        
         self.last_collisions = self.rect().collideobjectsall(self.game.entities)
 
 

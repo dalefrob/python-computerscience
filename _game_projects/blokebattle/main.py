@@ -21,6 +21,9 @@ def setup():
   blokes.append(Bloke("Ching"))
   blokes.append(Bloke("Ryan"))
   blokes.append(Bloke("Cindy"))
+  blokes.append(Bloke("David"))
+  blokes.append(Bloke("Ethan"))
+  blokes.append(Bloke("Ivy"))
 
   bloke : Bloke
   for bloke in blokes:
