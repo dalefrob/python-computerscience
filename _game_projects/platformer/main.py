@@ -48,8 +48,8 @@ class Game():
         self.tilemap = Tilemap(self, 64, 16, 16)
         # self.tiles = [pg.Rect(600,150,50,50), pg.Rect(400,150,50,50), pg.Rect(50,200,500,50), pg.Rect(200,150,50,50)]
         self.entities = []
-        enemy = Enemy(self, (300, 96), (26, 26))
-        self.entities.append(enemy)
+        #enemy = Enemy(self, (300, 96), (26, 26))
+        #self.entities.append(enemy)
     
     def run(self):
         while self.running:

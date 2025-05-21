@@ -55,17 +55,17 @@ class PhysicsEntity():
 
         # get nearest tiles
         map_coord = self.game.tilemap.world_to_map(self.rect().move(dx, dy).center)
-        tile_rects = self.game.tilemap.get_neighbor_rects(map_coord)
-        
-        # TODO ---- Get the tiles according to the velocity of the player, not all in a set of 9
-
-
-        _new_pos = self.pos
+        tile_rects = self.game.tilemap.get_neighbor_rects(map_coord) # Query all 9 rects - otherwise youd wuery the whole set of collision sets
 
         _test_rect = self.rect().move(dx, 0)
-        
+
         # Check for horizontal collisions
         for tile_rect in collision_test(_test_rect, tile_rects):   # OLD --- self.game.tiles
+            assert isinstance(tile_rect, pg.Rect)
+            penetration = {
+                "left": _test_rect.left - tile_rect.right,
+                "right": _test_rect.right - tile_rect.left
+            }
             if self.velocity[0] > 0:
                 dx = 0
                 #_new_pos[0] = tile_rect.left - self.size[0]
@@ -76,7 +76,7 @@ class PhysicsEntity():
             
 
         # Move horizontally
-        _new_pos[0] += dx
+        self.pos[0] += int(dx)
 
         # Move vertically
         _test_rect = self.rect().move(0, dy)
@@ -88,18 +88,17 @@ class PhysicsEntity():
                 "floor": _test_rect.bottom - tile_rect.top,
                 "ceiling": _test_rect.top - tile_rect.bottom
             }
-            print(penetration)
             if self.velocity[1] > 0:
                 dy = 0
-                #_new_pos[1] = tile.top - self.size[1]
+                self.pos[1] = tile_rect.top - self.size[1] # Snap to floor
                 self.velocity[1] = 1 # IMPORTANT!!! --- Set this to 1 so that the character tries to collide with the ground next frame!
                 self.on_floor = True
             elif self.velocity[1] < 0:
-                dy = 0
+                dy = 1
                 #_new_pos[1] = tile.bottom
                 self.on_ceiling = True
         
-        _new_pos[1] += dy
+        self.pos[1] += int(dy) # Prevents any half steps up tiles
         
         self.last_collisions = self.rect().collideobjectsall(self.game.entities)
 
