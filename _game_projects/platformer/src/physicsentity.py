@@ -1,5 +1,5 @@
 import pygame as pg
-from src.tilemap import Tilemap
+from src.tilemap import Tilemap, Tile
 
 GRAVITY = 18.0
 
@@ -9,6 +9,15 @@ def collision_test(rect, list_rects):
         if rect.colliderect(r):
             collisions.append(r)
     return collisions
+
+
+def collision_test_tile(rect, tile_list):
+    collision_tiles = []
+    for t in tile_list:
+        assert isinstance(t, Tile)
+        if rect.colliderect(t.get_rect()):
+            collision_tiles.append(t)
+    return collision_tiles
 
 
 class PhysicsEntity():
@@ -56,12 +65,14 @@ class PhysicsEntity():
         # get nearest tiles
         map_coord = self.game.tilemap.world_to_map(self.rect().move(dx, dy).center)
         tile_rects = self.game.tilemap.get_neighbor_rects(map_coord) # Query all 9 rects - otherwise youd wuery the whole set of collision sets
+        tiles = self.game.tilemap.get_neighbor_tiles(map_coord)
 
         _test_rect = self.rect().move(dx, 0)
 
         # Check for horizontal collisions
-        for tile_rect in collision_test(_test_rect, tile_rects):   # OLD --- self.game.tiles
-            assert isinstance(tile_rect, pg.Rect)
+        for tile in collision_test_tile(_test_rect, tiles):   # OLD --- self.game.tiles
+            assert isinstance(tile, Tile)
+            tile_rect = tile.get_rect()
             penetration = {
                 "left": _test_rect.left - tile_rect.right,
                 "right": _test_rect.right - tile_rect.left
@@ -82,15 +93,15 @@ class PhysicsEntity():
         _test_rect = self.rect().move(0, dy)
         
         # Check for vertical collisions
-        for tile_rect in collision_test(_test_rect, tile_rects):
-            assert isinstance(tile_rect, pg.Rect)
+        for tile in collision_test(_test_rect, tile_rects):
+            assert isinstance(tile, pg.Rect)
             penetration = {
-                "floor": _test_rect.bottom - tile_rect.top,
-                "ceiling": _test_rect.top - tile_rect.bottom
+                "floor": _test_rect.bottom - tile.top,
+                "ceiling": _test_rect.top - tile.bottom
             }
             if self.velocity[1] > 0:
                 dy = 0
-                self.pos[1] = tile_rect.top - self.size[1] # Snap to floor
+                self.pos[1] = tile.top - self.size[1] # Snap to floor
                 self.velocity[1] = 1 # IMPORTANT!!! --- Set this to 1 so that the character tries to collide with the ground next frame!
                 self.on_floor = True
             elif self.velocity[1] < 0:
