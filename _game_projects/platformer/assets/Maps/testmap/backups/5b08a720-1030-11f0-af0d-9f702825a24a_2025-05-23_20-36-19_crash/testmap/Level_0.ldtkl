@@ -29,7 +29,7 @@
 	"fieldInstances": [],
 	"layerInstances": [
 		{
-			"__identifier": "Foreground",
+			"__identifier": "Tiles",
 			"__type": "Tiles",
 			"__cWid": 48,
 			"__cHei": 16,
@@ -287,80 +287,6 @@
 				{ "px": [752,240], "src": [224,96], "f": 0, "t": 146, "d": [767], "a": 1 }
 			],
 			"entityInstances": []
-		},
-		{
-			"__identifier": "Entities",
-			"__type": "Entities",
-			"__cWid": 48,
-			"__cHei": 16,
-			"__gridSize": 16,
-			"__opacity": 1,
-			"__pxTotalOffsetX": 0,
-			"__pxTotalOffsetY": 0,
-			"__tilesetDefUid": null,
-			"__tilesetRelPath": null,
-			"iid": "7dde7f60-3740-11f0-b291-5153ed85f754",
-			"levelId": 0,
-			"layerDefUid": 6,
-			"pxOffsetX": 0,
-			"pxOffsetY": 0,
-			"visible": true,
-			"optionalRules": [],
-			"intGridCsv": [],
-			"autoLayerTiles": [],
-			"seed": 108694,
-			"overrideTilesetUid": null,
-			"gridTiles": [],
-			"entityInstances": [
-				{
-					"__identifier": "PlayerStart",
-					"__grid": [6,11],
-					"__pivot": [0,0],
-					"__tags": [],
-					"__tile": null,
-					"__smartColor": "#3E8948",
-					"iid": "8a0d16c0-3740-11f0-b291-d51f9813759c",
-					"width": 16,
-					"height": 28,
-					"defUid": 4,
-					"px": [96,176],
-					"fieldInstances": [],
-					"__worldX": 96,
-					"__worldY": 176
-				},
-				{
-					"__identifier": "Mushroom",
-					"__grid": [18,11],
-					"__pivot": [0,0],
-					"__tags": [],
-					"__tile": null,
-					"__smartColor": "#A22633",
-					"iid": "950b1d60-3740-11f0-b291-a1a0b5aec7f4",
-					"width": 26,
-					"height": 26,
-					"defUid": 5,
-					"px": [288,176],
-					"fieldInstances": [],
-					"__worldX": 288,
-					"__worldY": 176
-				},
-				{
-					"__identifier": "Mushroom",
-					"__grid": [40,12],
-					"__pivot": [0,0],
-					"__tags": [],
-					"__tile": null,
-					"__smartColor": "#A22633",
-					"iid": "9801c820-3740-11f0-b291-552335cdb913",
-					"width": 26,
-					"height": 26,
-					"defUid": 5,
-					"px": [640,192],
-					"fieldInstances": [],
-					"__worldX": 640,
-					"__worldY": 192
-				}
-			]
 		}
 	],
 	"__neighbours": []

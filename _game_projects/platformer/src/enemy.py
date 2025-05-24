@@ -44,8 +44,7 @@ class Enemy(PhysicsEntity):
 
 
     def update(self, dt):
-        self.velocity[1] += GRAVITY * dt # Add gravity
-        self.move_and_collide(dt)
+        self.velocity[1] += GRAVITY # Add gravity
 
         # run a method based on state
         if hasattr(self, self.current_state):
@@ -55,7 +54,9 @@ class Enemy(PhysicsEntity):
             case self.IDLE | self.HIT:
                 self.velocity[0] = 0
             case self.RUN:
-                self.velocity[0] = self.direction * 0.5
+                self.velocity[0] = self.direction * self.speed
+
+        self.move_and_collide(dt)
 
         # animate frames
         now = pg.time.get_ticks()
@@ -80,7 +81,7 @@ class Enemy(PhysicsEntity):
         if self.is_dead():
             self.current_state = self.DEAD
             self.playing = False
-            self.velocity.y = -3
+            self.velocity.y = -200
             self.disable_collision = True
             return
         self.change_animation("hit")
@@ -108,11 +109,13 @@ class Enemy(PhysicsEntity):
 
     def render(self, surface, offset):
         adjusted_rect = self.rect().move(-offset.x, -offset.y)
-        #pg.draw.rect(surface, (0, 255, 0), adjusted_rect, 1)
+        pg.draw.rect(surface, (0, 255, 0), adjusted_rect, 1)
         img_to_blit = self.animations[self.current_animation][self.frame_index]
         img_to_blit = pg.transform.flip(img_to_blit, self.direction == 1, False)
         img_to_blit = pg.transform.rotate(img_to_blit, self.rotation)
         surface.blit(img_to_blit, adjusted_rect.move(self.render_offset[0], self.render_offset[1]))
+
+        self.render_debug(surface, offset)
 
     def __str__(self):
         return "Mushroom"

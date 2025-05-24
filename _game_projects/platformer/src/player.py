@@ -12,7 +12,7 @@ class Player(PhysicsEntity):
     """
     def __init__(self, game, pos, size):
         super().__init__(game, pos, size)
-        self.render_offset = [-4,-4]
+        self.render_offset = [-8,-4]
         self.inputs = {
             "right": False,
             "left": False,
@@ -34,25 +34,29 @@ class Player(PhysicsEntity):
         self.current_animation = "idle"
         self.last_update = 0
         self.frame_index = 0
+        # att
+        self.speed = 100.0
+        self.jump_strength = 350
 
 
     def update(self, dt):
-        self.velocity[1] += GRAVITY * dt # Add gravity
-        self.move_and_collide(dt)
+        self.velocity[1] += GRAVITY # Add gravity
 
         # horizontal logic
         if self.inputs["right"]:
             self.direction = 1
-            self.velocity[0] = 3
+            self.velocity[0] = self.speed
             if self.on_floor:
                 self.change_animation("run")
         elif self.inputs["left"]:
             self.direction = -1
-            self.velocity[0] = -3
+            self.velocity[0] = -self.speed
             if self.on_floor:
                 self.change_animation("run")
         elif self.inputs["left"] + self.inputs["right"] == 0:
             self.velocity[0] = 0
+
+        self.move_and_collide(dt)
 
         # vertical logic
         if not self.on_floor:
@@ -89,7 +93,7 @@ class Player(PhysicsEntity):
 
 
     def jump(self):
-        self.velocity[1] = -7
+        self.velocity[1] = -self.jump_strength
         self.on_floor = False
 
 
@@ -106,9 +110,7 @@ class Player(PhysicsEntity):
         else:
             surface.blit(self.animations[self.current_animation][self.frame_index], adjusted_rect.move(self.render_offset[0], self.render_offset[1]))
 
-        text_surface = self.game.debug_font.render(f"vel: {self.velocity}", False, (0, 0, 0))
-        surface.blit(text_surface, (0,0))
-        #pg.draw.rect(surface, (0, 255, 0), adjusted_rect, 1)
+        pg.draw.rect(surface, (0, 255, 0), adjusted_rect, 1)
 
 
     def __str__(self):

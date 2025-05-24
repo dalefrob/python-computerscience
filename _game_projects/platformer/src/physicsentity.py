@@ -1,4 +1,5 @@
 import pygame as pg
+import math
 from src.tilemap import Tilemap, Tile
 
 GRAVITY = 18.0
@@ -54,8 +55,8 @@ class PhysicsEntity():
         self.on_floor = False
         self.on_ceiling = False
 
-        dx = self.velocity[0] * dt * self.speed
-        dy = self.velocity[1] * dt * self.speed
+        dx = self.velocity[0] * dt
+        dy = self.velocity[1] * dt
 
         # No collisions, just move
         if self.disable_collision == True:
@@ -64,10 +65,10 @@ class PhysicsEntity():
 
         # get nearest tiles
         map_coord = self.game.tilemap.world_to_map(self.rect().move(dx, dy).center)
-        tile_rects = self.game.tilemap.get_neighbor_rects(map_coord) # Query all 9 rects - otherwise youd wuery the whole set of collision sets
+        tile_rects = self.game.tilemap.get_neighbor_rects(map_coord) # Query all 9 rects - otherwise youd query the whole set of collision sets
         tiles = self.game.tilemap.get_neighbor_tiles(map_coord)
 
-        _test_rect = self.rect().move(dx, 0)
+        _test_rect = self.rect().move(math.ceil(dx*2), 0)
 
         # Check for horizontal collisions
         for tile in collision_test_tile(_test_rect, tiles):   # OLD --- self.game.tiles
@@ -79,19 +80,17 @@ class PhysicsEntity():
             }
             if self.velocity[0] > 0:
                 dx = 0
-                #_new_pos[0] = tile_rect.left - self.size[0]
             elif self.velocity[0] < 0:
                 dx = 0
-                #_new_pos[0] = tile_rect.right
             self.on_wall = True
             
 
         # Move horizontally
-        self.pos[0] += int(dx)
+        self.pos[0] += dx
 
         # Move vertically
-        _test_rect = self.rect().move(0, dy)
-        
+        _test_rect = self.rect().move(0, math.ceil(dy)) # Gotta round this to make sure pixel snapping happens
+
         # Check for vertical collisions
         for tile in collision_test(_test_rect, tile_rects):
             assert isinstance(tile, pg.Rect)
@@ -106,12 +105,17 @@ class PhysicsEntity():
                 self.on_floor = True
             elif self.velocity[1] < 0:
                 dy = 1
-                #_new_pos[1] = tile.bottom
                 self.on_ceiling = True
         
-        self.pos[1] += int(dy) # Prevents any half steps up tiles
+        if not self.on_floor:
+            self.pos[1] += dy
         
         self.last_collisions = self.rect().collideobjectsall(self.game.entities)
+
+
+    def render_debug(self, surface, offset):
+        text_surface = self.game.debug_font.render(f"v:{self.velocity}", False, (0, 0, 0))
+        surface.blit(text_surface, self.rect().move(-offset.x, -offset.y - 8))
 
 
     def render(self, surface, offset):

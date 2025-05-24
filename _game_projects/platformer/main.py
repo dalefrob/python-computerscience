@@ -39,7 +39,7 @@ class Game():
         self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pg.time.Clock()
         self.running = True
-        self.player = Player(self, (96, 96), (24, 28))
+        self.player = Player(self, (96, 96), (16, 28))
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.camera.set_bounds(0, 0, 2000, 0)
         self.debug_font = pg.font.SysFont('Console', 8)
@@ -48,8 +48,8 @@ class Game():
         self.tilemap = Tilemap(self, 64, 16, 16)
         # self.tiles = [pg.Rect(600,150,50,50), pg.Rect(400,150,50,50), pg.Rect(50,200,500,50), pg.Rect(200,150,50,50)]
         self.entities = []
-        #enemy = Enemy(self, (300, 96), (26, 26))
-        #self.entities.append(enemy)
+        enemy = Enemy(self, (300, 120), (26, 26))
+        self.entities.append(enemy)
     
     def run(self):
         while self.running:
@@ -79,20 +79,10 @@ class Game():
 
     def render_world(self):
         self.screen.fill(SKYBLUE)
-
-        # Camera offset
-        offset_x, offset_y = self.camera.offset
-        
-        # Only draw tiles in view
-        # for tile in self.tiles:
-        #     if tile.colliderect(pg.Rect(offset_x, offset_y, SCREEN_WIDTH, SCREEN_HEIGHT)):
-        #         # Apply camera offset
-        #         adjusted_tile = tile.move(-offset_x, -offset_y)
-        #         pg.draw.rect(self.screen, (255, 255, 0), adjusted_tile)
-        
         self.tilemap.render(self.screen, self.camera.offset)
         # Draw the player and apply the offset
         self.player.render(self.screen, self.camera.offset)
+        # Draw the entities and apply the offset
         for entity in self.entities:
             entity.render(self.screen, self.camera.offset)
 

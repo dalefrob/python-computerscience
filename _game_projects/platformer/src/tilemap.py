@@ -31,8 +31,9 @@ class Tilemap():
         self.surface = pg.Surface((cell_size * map_width, cell_size * map_height))
 
         # tiles
-        self.tiles_atlas = load_tilesheet()
-        self.tiles = load_ldtk_map()
+        self.map_settings = load_map_settings("testmap")
+        self.tiles_atlas = load_tilesheet()  # TODO -- Load this from the ldtk settings
+        self.tiles = load_level("Level_0")
         # test
         self.platforms = [(2,9), (3,9), (4,9)]
 
@@ -89,6 +90,11 @@ class Tilemap():
             pg.draw.rect(surface, (100, 100, 0), self.debug_rect.move(-offset[0], -offset[1]))
 
 
+class Tileset():
+    def __init__(self):
+        pass
+
+
 neighbor_offsets = [
     [0,0],
     [-1, 0],
@@ -119,19 +125,45 @@ def load_tilesheet(tilesize = 16):
     return atlas
 
 
-def load_ldtk_map():
-    map_tiles = {}
-    json_path = path / "../assets/Maps/testmap/Level_0.ldtkl"
+def load_map_settings(map_name):
+    """
+    Loads the map/world settings from a 'ldtk' file
+    """
+    json_path = path / f"../assets/Maps/{map_name}.ldtk"
     with open(json_path, "r") as read_file:
         result = json.load(read_file)
-        grid_tiles = result['layerInstances'][0]['gridTiles']
-        for i in grid_tiles:
-            screen_coord = i["px"]
-            src_coord = i["src"] 
-            key = (screen_coord[0] // 16, screen_coord[1] // 16)
-            value = (src_coord[0] // 16, src_coord[1] // 16)
-            # Set up tile
-            tile = Tile(key, (16, 16), value)
+    return result
 
-            map_tiles[key] = tile
+
+def load_tilemap_layer(level_data):
+    map_tiles = {}
+    grid_tiles = level_data['layerInstances'][0]['gridTiles']
+    for i in grid_tiles:
+        screen_coord = i["px"]
+        src_coord = i["src"] 
+        key = (screen_coord[0] // 16, screen_coord[1] // 16)
+        value = (src_coord[0] // 16, src_coord[1] // 16)
+        # Set up tile
+        tile = Tile(key, (16, 16), value)
+
+        map_tiles[key] = tile
+    return map_tiles
+
+
+def load_entity_layer():
+    pass
+
+
+def load_level(level_name):
+    """
+    Loads a full level from a 'ldtkl' file - note the final 'l'
+    """
+    map_tiles = {}
+    json_path = path / f"../assets/Maps/testmap/{level_name}.ldtkl"
+
+    with open(json_path, "r") as read_file: # Open the file, read it and clsoe the file
+        result = json.load(read_file)
+
+    map_tiles = load_tilemap_layer(result)
+
     return map_tiles
