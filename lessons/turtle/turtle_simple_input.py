@@ -10,7 +10,7 @@ def ml():
     brad.left(5)
 
 def mr():
-    brad.right(-5)
+    brad.right(5)
 
 screen = Screen()
 
