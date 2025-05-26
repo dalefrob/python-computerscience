@@ -39,26 +39,50 @@ class Game():
         self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pg.time.Clock()
         self.running = True
-        self.player = Player(self, (96, 96), (16, 28))
+        
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.camera.set_bounds(0, 0, 2000, 0)
         self.debug_font = pg.font.SysFont('Console', 8)
 
+        self.player = None
+        self.player_start = (0,0)
+        self.entities = []
+
         # level
         self.level = Level(self, "Level_0")
-
-        # objects
-        #self.tilemap = TilemapLayer(64 * 16, 16 * 16, 16)
-        # self.tiles = [pg.Rect(600,150,50,50), pg.Rect(400,150,50,50), pg.Rect(50,200,500,50), pg.Rect(200,150,50,50)]
-        self.entities = []
-        enemy = Enemy(self, (300, 120), (26, 26))
-        self.entities.append(enemy)
+        self.spawn_entities(self.level.entity_layers)
     
+
+    def spawn_player(self):
+        if self.player:
+            del self.player
+        self.player = Player(self, self.player_start)
+
+
+    def spawn_entities(self, entity_layers):
+        for layer in entity_layers:
+            for entity in layer:
+                world_pos = entity["world_pos"]
+                # Spawn appropriate entity
+                match entity["name"]:
+                    case "Player":
+                        self.player_start = world_pos
+                        self.spawn_player()
+                    case "Mushroom":
+                        enemy = Enemy(self, world_pos)
+                        self.entities.append(enemy)
+
+
     def run(self):
         while self.running:
             dt = self.clock.tick(FPS) / 1000  # Convert milliseconds to seconds
             # update
             self.player.update(dt)
+            # check out of bounds
+            if self.player.pos.y > SCREEN_HEIGHT + 50:
+                # auto destroy and spawn player
+                self.spawn_player()
+
             for entity in self.entities:
                 entity.update(dt)
 

@@ -11,8 +11,8 @@ class Enemy(PhysicsEntity):
     HIT = "hit"
     DEAD = "dead"
 
-    def __init__(self, game, pos, size):
-        super().__init__(game, pos, size)
+    def __init__(self, game, pos):
+        super().__init__(game, pos,  (26, 26))
         self.render_offset = [-3,-6]
         self.rotation = 0
         # states
@@ -84,12 +84,12 @@ class Enemy(PhysicsEntity):
             self.velocity.y = -200
             self.disable_collision = True
             return
-        self.change_animation("hit")
+        self.change_animation("hit", True)
         self.current_state = self.HIT
 
 
-    def change_animation(self, next_animation_name):
-        if self.current_animation != next_animation_name:
+    def change_animation(self, next_animation_name, force=False):
+        if self.current_animation != next_animation_name or force:
             self.frame_index = 0
             self.current_animation = next_animation_name
 

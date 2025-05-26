@@ -11,7 +11,7 @@
 	"iid": "5b08a720-1030-11f0-af0d-9f702825a24a",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 9,
+	"nextUid": 10,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -113,7 +113,7 @@
 		}
 	], "entities": [
 		{
-			"identifier": "PlayerStart",
+			"identifier": "Player",
 			"uid": 4,
 			"tags": [],
 			"exportToToc": false,
@@ -142,7 +142,7 @@
 			"nineSliceBorders": [],
 			"maxCount": 1,
 			"limitScope": "PerLevel",
-			"limitBehavior": "MoveLastOne",
+			"limitBehavior": "PreventAdding",
 			"pivotX": 0,
 			"pivotY": 0,
 			"fieldDefs": []

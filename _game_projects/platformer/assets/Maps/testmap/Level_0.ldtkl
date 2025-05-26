@@ -313,7 +313,7 @@
 			"gridTiles": [],
 			"entityInstances": [
 				{
-					"__identifier": "PlayerStart",
+					"__identifier": "Player",
 					"__grid": [6,11],
 					"__pivot": [0,0],
 					"__tags": [],

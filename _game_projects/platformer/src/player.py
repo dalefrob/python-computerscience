@@ -10,8 +10,8 @@ class Player(PhysicsEntity):
     The player 
     Contains animations
     """
-    def __init__(self, game, pos, size):
-        super().__init__(game, pos, size)
+    def __init__(self, game, pos):
+        super().__init__(game, pos, (16, 28))
         self.render_offset = [-8,-4]
         self.inputs = {
             "right": False,
@@ -35,7 +35,7 @@ class Player(PhysicsEntity):
         self.last_update = 0
         self.frame_index = 0
         # att
-        self.speed = 100.0
+        self.speed = 120.0
         self.jump_strength = 350
 
 
@@ -76,7 +76,7 @@ class Player(PhysicsEntity):
                 if isinstance(coll, Enemy):
                     assert isinstance(coll, Enemy)
                     if not coll.is_dead() and self.current_animation == "fall": # for now this prevents multiple collisions
-                        self.jump()
+                        self.jump(0.5)
                         coll.bopped()
 
         # animate frames
@@ -86,14 +86,14 @@ class Player(PhysicsEntity):
             self.last_update = now  # Reset the timer
 
 
-    def change_animation(self, next_animation_name):
-        if self.current_animation != next_animation_name:
+    def change_animation(self, next_animation_name, force=False):
+        if self.current_animation != next_animation_name or force:
             self.frame_index = 0
             self.current_animation = next_animation_name
 
 
-    def jump(self):
-        self.velocity[1] = -self.jump_strength
+    def jump(self, strength_mod=1.0):
+        self.velocity[1] = -self.jump_strength * strength_mod
         self.on_floor = False
 
 

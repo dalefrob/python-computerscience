@@ -101,7 +101,7 @@ class Level():
         self.game = game
         
         self.tilemap_layers = []
-        self.entity_data = []
+        self.entity_layers = []
 
         _result = {}
         json_path = path / f"../assets/Maps/testmap/{level_name}.ldtkl"
@@ -113,11 +113,21 @@ class Level():
 
         # Load the tilemap layers
         for layer_instance_dict in _result["layerInstances"]:
-            tilemap_layer = self.load_tilemap_layer(layer_instance_dict)
-            self.tilemap_layers.append(tilemap_layer)
+            layer = None
+            match layer_instance_dict["__type"]:
+                case "Tiles":
+                    layer = self.load_tilemap_layer(layer_instance_dict)
+                    self.tilemap_layers.append(layer)
+                case "Entities":
+                    layer = self.load_entity_layer(layer_instance_dict)
+                    self.entity_layers.append(layer)
+
+        print(f"Level '{level_name}' loaded")    
+
 
     def get_fg_layer(self):
         return self.tilemap_layers[0]
+
 
     def load_tilemap_layer(self, layer_instance_dict) -> TilemapLayer:
         cell_size = 16
@@ -137,9 +147,14 @@ class Level():
         return tilemap_layer
 
 
-    def load_entity_layer(level_name):
+    def load_entity_layer(self, layer_instance_dict):
         entities = []
-
+        for e in layer_instance_dict["entityInstances"]:
+            entity = {
+                "name": e["__identifier"],
+                "world_pos": e["px"] 
+            }
+            entities.append(entity)
         return entities
 
 
