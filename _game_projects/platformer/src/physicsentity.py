@@ -1,6 +1,6 @@
 import pygame as pg
 import math
-from src.tilemap import Tilemap, Tile
+from src.tilemap import TilemapLayer, Tile
 
 GRAVITY = 18.0
 
@@ -64,9 +64,10 @@ class PhysicsEntity():
             return
 
         # get nearest tiles
-        map_coord = self.game.tilemap.world_to_map(self.rect().move(dx, dy).center)
-        tile_rects = self.game.tilemap.get_neighbor_rects(map_coord) # Query all 9 rects - otherwise youd query the whole set of collision sets
-        tiles = self.game.tilemap.get_neighbor_tiles(map_coord)
+        fglayer : TilemapLayer = self.game.level.get_fg_layer()
+        map_coord = fglayer.world_to_map(self.rect().move(dx, dy).center)
+        tile_rects = fglayer.get_neighbor_rects(map_coord) # Query all 9 rects - otherwise youd query the whole set of collision sets
+        tiles = fglayer.get_neighbor_tiles(map_coord)
 
         _test_rect = self.rect().move(math.ceil(dx*2), 0)
 
@@ -92,18 +93,19 @@ class PhysicsEntity():
         _test_rect = self.rect().move(0, math.ceil(dy)) # Gotta round this to make sure pixel snapping happens
 
         # Check for vertical collisions
-        for tile in collision_test(_test_rect, tile_rects):
-            assert isinstance(tile, pg.Rect)
+        for tile in collision_test_tile(_test_rect, tiles):
+            assert isinstance(tile, Tile)
+            tile_rect = tile.get_rect()
             penetration = {
-                "floor": _test_rect.bottom - tile.top,
-                "ceiling": _test_rect.top - tile.bottom
+                "floor": _test_rect.bottom - tile_rect.top,
+                "ceiling": _test_rect.top - tile_rect.bottom
             }
             if self.velocity[1] > 0:
                 dy = 0
-                self.pos[1] = tile.top - self.size[1] # Snap to floor
+                self.pos[1] = tile_rect.top - self.size[1] # Snap to floor
                 self.velocity[1] = 1 # IMPORTANT!!! --- Set this to 1 so that the character tries to collide with the ground next frame!
                 self.on_floor = True
-            elif self.velocity[1] < 0:
+            elif self.velocity[1] < 0 and tile.collision == Tile.TILE_SOLID:
                 dy = 1
                 self.on_ceiling = True
         

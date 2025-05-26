@@ -4,31 +4,34 @@ from pathlib import Path
 
 path = Path(__file__).parent.resolve()
 
-TILE_NONSOLID = 0
-TILE_SOLID = 1
-TILE_PLATFORM = 2
 
 class Tile():
-    """ Basic structure to hold tile info """
+    """ 
+    Basic structure to hold tile info 
+    """
+    TILE_SOLID = 0
+    TILE_PLATFORM = 1
+    
     def __init__(self, coord, size, src_coord):
         self.coord = coord
         self.size = size
         self.src_coord = src_coord
-        self.solidarity = TILE_SOLID
+        self.collision = 0
     
     def get_rect(self):
         rect = pg.Rect(self.coord[0] * self.size[0], self.coord[1] * self.size[1], self.size[0], self.size[1])
         return rect
 
 
-class Tilemap():
-    def __init__(self, game, map_width, map_height, cell_size):
-        self.game = game
+class TilemapLayer():
+    def __init__(self, map_width, map_height, cell_size):
+        
         # size
+        self.layer_id = 0
         self.cell_size = cell_size
         self.width = map_width
         self.height = map_height
-        self.surface = pg.Surface((cell_size * map_width, cell_size * map_height))
+        self.surface = pg.Surface((map_width, map_height))
 
         # tiles
         self.map_settings = load_map_settings("testmap")
@@ -88,6 +91,63 @@ class Tilemap():
                     pg.draw.rect(surface, (180, 180, 0), rect, 1)
         if self.debug_rect:
             pg.draw.rect(surface, (100, 100, 0), self.debug_rect.move(-offset[0], -offset[1]))
+    
+
+class Level():
+    """
+    A ldtk level that contains the tilemap, entity locations. 
+    """
+    def __init__(self, game, level_name="Level_0"):
+        self.game = game
+        
+        self.tilemap_layers = []
+        self.entity_data = []
+
+        _result = {}
+        json_path = path / f"../assets/Maps/testmap/{level_name}.ldtkl"
+        with open(json_path, "r") as read_file: # Open the file, read it and clsoe the file
+            _result = json.load(read_file)
+        
+        self.px_width = _result["pxWid"]
+        self.px_height = _result["pxHei"]
+
+        # Load the tilemap layers
+        for layer_instance_dict in _result["layerInstances"]:
+            tilemap_layer = self.load_tilemap_layer(layer_instance_dict)
+            self.tilemap_layers.append(tilemap_layer)
+
+    def get_fg_layer(self):
+        return self.tilemap_layers[0]
+
+    def load_tilemap_layer(self, layer_instance_dict) -> TilemapLayer:
+        cell_size = 16
+        tilemap_layer = TilemapLayer(self.px_width, self.px_height, cell_size)
+        _tiles = {}
+        grid_tiles = layer_instance_dict['gridTiles']
+        for i in grid_tiles:
+            screen_coord = i["px"]
+            src_coord = i["src"] 
+            key = (screen_coord[0] // 16, screen_coord[1] // 16)
+            value = (src_coord[0] // 16, src_coord[1] // 16)
+            # Set up tile
+            tile = Tile(key, (16, 16), value)
+            tile.collision = 0 # self.get_tile_collsion()
+            _tiles[key] = tile
+        tilemap_layer.tiles = _tiles
+        return tilemap_layer
+
+
+    def load_entity_layer(level_name):
+        entities = []
+
+        return entities
+
+
+    def render(self, surface, offset):
+        for layer in self.tilemap_layers:
+            assert isinstance(layer, TilemapLayer)
+            layer.render(surface, offset)
+            
 
 
 class Tileset():
@@ -135,7 +195,7 @@ def load_map_settings(map_name):
     return result
 
 
-def load_tilemap_layer(level_data):
+def load_tilemap_layer_OB(level_data):
     map_tiles = {}
     grid_tiles = level_data['layerInstances'][0]['gridTiles']
     for i in grid_tiles:
@@ -145,13 +205,10 @@ def load_tilemap_layer(level_data):
         value = (src_coord[0] // 16, src_coord[1] // 16)
         # Set up tile
         tile = Tile(key, (16, 16), value)
-
+        tile.collision = 0 # self.get_tile_collsion()
         map_tiles[key] = tile
     return map_tiles
 
-
-def load_entity_layer():
-    pass
 
 
 def load_level(level_name):
@@ -164,6 +221,6 @@ def load_level(level_name):
     with open(json_path, "r") as read_file: # Open the file, read it and clsoe the file
         result = json.load(read_file)
 
-    map_tiles = load_tilemap_layer(result)
+    map_tiles = load_tilemap_layer_OB(result)
 
     return map_tiles

@@ -4,7 +4,7 @@ import sys
 
 from src.enemy import Enemy
 from src.player import Player
-from src.tilemap import Tilemap
+from src.tilemap import Level, TilemapLayer
 
 SCREEN_WIDTH = 320
 SCREEN_HEIGHT = 240
@@ -44,8 +44,11 @@ class Game():
         self.camera.set_bounds(0, 0, 2000, 0)
         self.debug_font = pg.font.SysFont('Console', 8)
 
+        # level
+        self.level = Level(self, "Level_0")
+
         # objects
-        self.tilemap = Tilemap(self, 64, 16, 16)
+        #self.tilemap = TilemapLayer(64 * 16, 16 * 16, 16)
         # self.tiles = [pg.Rect(600,150,50,50), pg.Rect(400,150,50,50), pg.Rect(50,200,500,50), pg.Rect(200,150,50,50)]
         self.entities = []
         enemy = Enemy(self, (300, 120), (26, 26))
@@ -79,7 +82,7 @@ class Game():
 
     def render_world(self):
         self.screen.fill(SKYBLUE)
-        self.tilemap.render(self.screen, self.camera.offset)
+        self.level.render(self.screen, self.camera.offset)
         # Draw the player and apply the offset
         self.player.render(self.screen, self.camera.offset)
         # Draw the entities and apply the offset
