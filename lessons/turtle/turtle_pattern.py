@@ -1,7 +1,9 @@
 import turtle
 import random
+
 CIRCLE_SIZE = 40
 BGCOLOR = "#335566"
+
 colors = ["red", "black"]
 yellows = [i for i in range(1, 256, 5)]
 is_black = True
@@ -12,6 +14,7 @@ turtle.speed(0)
 turtle.bgcolor(BGCOLOR)
 x = (-s.window_width()/2) +(CIRCLE_SIZE/2)
 y = (s.window_height()/2) -CIRCLE_SIZE
+
 count = 0
 for i in range(s.window_width() // CIRCLE_SIZE):
     is_black = not is_black
@@ -38,5 +41,4 @@ for i in range(s.window_width() // CIRCLE_SIZE):
             turtle.end_fill()
         is_black = not is_black
     
-
 turtle.done()

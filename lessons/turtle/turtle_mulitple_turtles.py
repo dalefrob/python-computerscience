@@ -2,6 +2,7 @@ import turtle as t
 import random
 
 # Teach turtle instances, importing as t, storing objects in lists, returning objects from a function
+# Teach nested loops
 
 #t.delay(0)
 #turtle_instance = t.Turtle()
@@ -24,7 +25,6 @@ for i in range(100):
         # turtle.speed(0)
         # turtle.screen.delay(0)
         #steps = int(random() * 50)
-        
         turtle.right(random.random() * 360)
         turtle.fd(20)
 
