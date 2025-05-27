@@ -150,9 +150,14 @@ class Level():
     def load_entity_layer(self, layer_instance_dict):
         entities = []
         for e in layer_instance_dict["entityInstances"]:
+            # Add the entity properties
+            properties = {}
+            for struct in e["fieldInstances"]:
+                properties[struct["__identifier"]] = struct["__value"]
             entity = {
                 "name": e["__identifier"],
-                "world_pos": e["px"] 
+                "world_pos": e["px"],
+                "properties": properties
             }
             entities.append(entity)
         return entities

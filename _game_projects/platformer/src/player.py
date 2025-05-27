@@ -34,13 +34,20 @@ class Player(PhysicsEntity):
         self.current_animation = "idle"
         self.last_update = 0
         self.frame_index = 0
-        # att
+
+        # attributes
         self.speed = 120.0
-        self.jump_strength = 350
+
+        self.jump_pressed = False
+        self.jump_strength = 265
+        self.jump_frames = 0
 
 
     def update(self, dt):
         self.velocity[1] += GRAVITY # Add gravity
+
+        if self.jump_pressed:
+            self.add_extra_jumpheight()
 
         # horizontal logic
         if self.inputs["right"]:
@@ -76,7 +83,7 @@ class Player(PhysicsEntity):
                 if isinstance(coll, Enemy):
                     assert isinstance(coll, Enemy)
                     if not coll.is_dead() and self.current_animation == "fall": # for now this prevents multiple collisions
-                        self.jump(0.5)
+                        self.jump(0.75)
                         coll.bopped()
 
         # animate frames
@@ -93,8 +100,19 @@ class Player(PhysicsEntity):
 
 
     def jump(self, strength_mod=1.0):
-        self.velocity[1] = -self.jump_strength * strength_mod
+        self.jump_pressed = True
+        self.jump_frames = 0
+
         self.on_floor = False
+        self.velocity[1] -= self.jump_strength * strength_mod
+
+
+    def add_extra_jumpheight(self):
+        if self.jump_frames < 8:
+            self.jump_frames += 1
+            self.velocity[1] -= 25
+        else:
+            self.jump_pressed = False
 
 
     def animate(self, dt):
@@ -118,6 +136,7 @@ class Player(PhysicsEntity):
 
 
     def handle_event(self, event):
+
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_RIGHT:
                 self.inputs["right"] = True
@@ -129,6 +148,7 @@ class Player(PhysicsEntity):
                 self.inputs["down"] = True
             if event.key == pg.K_SPACE and self.on_floor:
                 self.jump()
+
         if event.type == pg.KEYUP:
             if event.key == pg.K_RIGHT:
                 self.inputs["right"] = False
@@ -138,3 +158,5 @@ class Player(PhysicsEntity):
                 self.inputs["up"] = False
             if event.key == pg.K_DOWN:
                 self.inputs["down"] = False
+            if event.key == pg.K_SPACE:
+                self.jump_pressed = False

@@ -39,6 +39,11 @@ class Enemy(PhysicsEntity):
         self.health = 3
 
 
+    def ready(self):
+        if self.current_state == self.RUN:
+            self.change_animation("run")
+
+
     def is_dead(self):
         return self.health <= 0
 

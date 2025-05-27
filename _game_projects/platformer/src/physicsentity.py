@@ -45,6 +45,10 @@ class PhysicsEntity():
         return pg.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
 
 
+    def ready(self):
+        pass
+    
+
     def update(self, dt):
         pass
 

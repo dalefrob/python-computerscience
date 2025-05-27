@@ -51,6 +51,8 @@ class Game():
         # level
         self.level = Level(self, "Level_0")
         self.spawn_entities(self.level.entity_layers)
+        for e in self.entities:
+            e.ready()
     
 
     def spawn_player(self):
@@ -70,7 +72,12 @@ class Game():
                         self.spawn_player()
                     case "Mushroom":
                         enemy = Enemy(self, world_pos)
+                        # Set properties in the calss if it has them
+                        for key, value in entity["properties"].items():
+                            if hasattr(enemy, key):
+                                setattr(enemy, key, value)
                         self.entities.append(enemy)
+        print("Spawned Entities")
 
 
     def run(self):
