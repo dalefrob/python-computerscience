@@ -1,6 +1,7 @@
 import pygame as pg
 from pathlib import Path
 
+from src.engine import Animation, AnimationPlayer
 from src.physicsentity import *
 
 path = Path(__file__).parent.resolve()
@@ -23,7 +24,19 @@ class Enemy(PhysicsEntity):
         run = path / "../assets/Enemies/Mushroom/Run (32x32).png"
         hit = path / "../assets/Enemies/Mushroom/Hit.png"
 
+        anim_player = AnimationPlayer()
+        anim_player.add_animation("idle", Animation(load_animation_frames(idle, 14, 1)), True)
+        anim_player.add_animation("run", Animation(load_animation_frames(run, 16, 1)))
+        anim_player.add_animation("hit", Animation(load_animation_frames(hit, 5, 1)))
+        self.anim_player = anim_player
+
         self.animations = {
+            "idle": Animation(load_animation_frames(idle, 14, 1)),
+            "run": Animation(load_animation_frames(run, 16, 1)),
+            "hit": Animation(load_animation_frames(hit, 5, 1), False, self.on_hit_anim_ended),
+        }
+
+        self._animations = {
             "idle": load_animation_frames(idle, 14, 1),
             "run": load_animation_frames(run, 16, 1),
             "hit": load_animation_frames(hit, 5, 1)
@@ -41,7 +54,7 @@ class Enemy(PhysicsEntity):
 
     def ready(self):
         if self.current_state == self.RUN:
-            self.change_animation("run")
+            self.anim_player.change_animation("run")
 
 
     def is_dead(self):
@@ -63,11 +76,13 @@ class Enemy(PhysicsEntity):
 
         self.move_and_collide(dt)
 
+        self.anim_player.update()
+        #self.animations[self.current_animation].update(dt)
         # animate frames
-        now = pg.time.get_ticks()
-        if now - self.last_update > 60 and self.playing:  # 700 ms
-            self.animate(dt)
-            self.last_update = now  # Reset the timer
+        # now = pg.time.get_ticks()
+        # if now - self.last_update > 60 and self.playing:  # 700 ms
+        #     self.animate(dt)
+        #     self.last_update = now  # Reset the timer
 
 
     def run(self, dt):
@@ -99,6 +114,11 @@ class Enemy(PhysicsEntity):
             self.current_animation = next_animation_name
 
 
+    def on_hit_anim_ended(self):
+        self.current_state = self.RUN
+        self.change_animation("run")
+
+
     def on_animation_ended(self):
         if self.current_animation == "hit":
             self.current_state = self.RUN
@@ -107,7 +127,7 @@ class Enemy(PhysicsEntity):
 
     def animate(self, dt):
         self.frame_index += 1
-        if self.frame_index > len(self.animations[self.current_animation]) - 1:
+        if self.frame_index > len(self._animations[self.current_animation]) - 1:
             self.on_animation_ended()
             self.frame_index = 0
 
@@ -115,7 +135,8 @@ class Enemy(PhysicsEntity):
     def render(self, surface, offset):
         adjusted_rect = self.rect().move(-offset.x, -offset.y)
         pg.draw.rect(surface, (0, 255, 0), adjusted_rect, 1)
-        img_to_blit = self.animations[self.current_animation][self.frame_index]
+        #img_to_blit = self.animations[self.current_animation].get_animation_frame()
+        img_to_blit = self.anim_player.get_surface()
         img_to_blit = pg.transform.flip(img_to_blit, self.direction == 1, False)
         img_to_blit = pg.transform.rotate(img_to_blit, self.rotation)
         surface.blit(img_to_blit, adjusted_rect.move(self.render_offset[0], self.render_offset[1]))

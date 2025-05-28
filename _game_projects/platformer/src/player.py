@@ -160,3 +160,5 @@ class Player(PhysicsEntity):
                 self.inputs["down"] = False
             if event.key == pg.K_SPACE:
                 self.jump_pressed = False
+
+
