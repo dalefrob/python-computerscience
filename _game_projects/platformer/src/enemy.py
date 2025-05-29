@@ -25,16 +25,10 @@ class Enemy(PhysicsEntity):
         hit = path / "../assets/Enemies/Mushroom/Hit.png"
 
         anim_player = AnimationPlayer()
-        anim_player.add_animation("idle", Animation(load_animation_frames(idle, 14, 1)), True)
-        anim_player.add_animation("run", Animation(load_animation_frames(run, 16, 1)))
-        anim_player.add_animation("hit", Animation(load_animation_frames(hit, 5, 1)))
+        anim_player.add_animation("idle", Animation(idle, 14, 1))
+        anim_player.add_animation("run", Animation(run, 16, 1))
+        anim_player.add_animation("hit", Animation(hit, 5, 1, False), True)
         self.anim_player = anim_player
-
-        self.animations = {
-            "idle": Animation(load_animation_frames(idle, 14, 1)),
-            "run": Animation(load_animation_frames(run, 16, 1)),
-            "hit": Animation(load_animation_frames(hit, 5, 1), False, self.on_hit_anim_ended),
-        }
 
         self._animations = {
             "idle": load_animation_frames(idle, 14, 1),

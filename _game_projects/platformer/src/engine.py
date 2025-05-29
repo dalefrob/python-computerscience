@@ -5,43 +5,35 @@ class Animation():
     """
     A data class to hold information for an animation
     """
-    def __init__(self, frames, loop = True, finished_callback = lambda: ()):
-        self.frames = frames
+    def __init__(self, image, h_frames, v_frames, loop=True):
         self.frame_index = 0
-
-        self.last_update = 0
-        self.speed = 60
-
+        self.frames = []
         self.loop = True
-        self.playing = True
-        self.on_animation_finished = finished_callback # TODO - Create a reusuable observer pattern
 
-    def get_animation_frame(self):
+        img = pg.image.load(image).convert_alpha()
+        frame_width = img.width // h_frames
+        frame_height = img.height // v_frames
+        for f_y in range(v_frames):
+            for f_x in range(h_frames):
+                surf = img.subsurface(pg.Rect(frame_width * f_x, frame_height * f_y, frame_width, frame_height))
+                self.frames.append(surf)
+
+
+    def set_frame(self, index):
+        self.frame_index = index
+
+
+    def get_frame(self):
         return self.frames[self.frame_index]
+    
 
-
-    def play(self, restart=False):
-        self.playing = True
-        if restart:
-            self.frame_index = 0
-
-
-    def update(self, dt):
-        now = pg.time.get_ticks()
-        if now - self.last_update > self.speed and self.playing:  # 700 ms
-            self.animate(dt)
-            self.last_update = now  # Reset the timer
-
-
-    def animate(self, dt):
+    def animate(self):
         self.frame_index += 1
         if self.frame_index > len(self.frames) - 1:
-            self.on_animation_finished()
-            if self.loop:
-                self.frame_index = 0
-            else:
-                self.playing = False
-    
+            self.frame_index = 0
+            return False
+        return True
+
 
     def __getitem__(self, index):
         """
@@ -54,8 +46,6 @@ class Animation():
          return len(self.frames)
 
 
-
-
 class AnimationPlayer():
     def __init__(self, default_animation = None):
         self.animations = {}
@@ -64,8 +54,6 @@ class AnimationPlayer():
         if default_animation:
             self.current_animation = "default"
             self.add_animation("default", default_animation)
-        
-        self.frame_index = 0
 
         self.last_update = 0
         self.speed = 60
@@ -88,18 +76,15 @@ class AnimationPlayer():
     def update(self):
         now = pg.time.get_ticks()
         if now - self.last_update > self.speed and self.playing:
-            self.__animate()
+            current_anim = self.get_current_animation()
+            has_next_frame = current_anim.animate()
+
+            if not has_next_frame:
+                self.on_animation_finished()
+                if not current_anim.loop:
+                    self.playing = False
+
             self.last_update = now
-    
-    
-    def __animate(self):
-        self.frame_index += 1
-        if self.frame_index > len(self.get_current_animation()) - 1:
-            self.on_animation_finished()
-            if self.loop:
-                self.frame_index = 0
-            else:
-                self.playing = False
     
 
     def change_animation(self, next_animation_name, force=False):
@@ -114,4 +99,39 @@ class AnimationPlayer():
 
 
     def get_surface(self) -> pg.Surface:
-        return self.get_current_animation()[self.frame_index]
+        return self.get_current_animation().get_frame()
+
+
+class Timer():
+    def __init__(self, duration, func=None, repeat=None, autostart=False):
+        self.duration = duration
+        self.start_time = 0
+        self.active = False
+        self.func = func
+        self.repeat = repeat
+
+        if autostart:
+            self.activate()
+    
+    
+    def __bool__(self):
+        return self.active
+
+
+    def activate(self):
+        self.active = True
+        self.start_time = pg.time.get_ticks()
+    
+
+    def deactivate(self):
+        self.active = False
+        self.start_time = 0
+
+
+    def update(self):
+        if pg.time.get_ticks() - self.start_time >= self.duration:
+            if self.func and self.start_time != 0:
+                self.func()
+            self.deactivate()
+            if self.repeat:
+                self.activate()
