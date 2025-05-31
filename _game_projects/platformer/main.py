@@ -2,6 +2,7 @@ import pygame as pg
 from pygame.locals import *
 import sys
 
+from src.engine import Timer
 from src.enemy import Enemy
 from src.player import Player
 from src.tilemap import Level, TilemapLayer
@@ -44,22 +45,25 @@ class Game():
         self.camera.set_bounds(0, 0, 2000, 0)
         self.debug_font = pg.font.SysFont('Console', 8)
 
-        self.player = None
         self.player_start = (0,0)
         self.entities = []
+        self.timers = []
 
-        # level
+        # Spawning
         self.level = Level(self, "Level_0")
         self.spawn_entities(self.level.entity_layers)
         for e in self.entities:
             e.ready()
+        
+        self.player = Player(self, self.player_start)
     
 
     def spawn_player(self):
+        # Destroy existing player
         if self.player:
             del self.player
         self.player = Player(self, self.player_start)
-
+        
 
     def spawn_entities(self, entity_layers):
         for layer in entity_layers:
@@ -69,7 +73,6 @@ class Game():
                 match entity["name"]:
                     case "Player":
                         self.player_start = world_pos
-                        self.spawn_player()
                     case "Mushroom":
                         enemy = Enemy(self, world_pos)
                         # Set properties in the calss if it has them
@@ -83,12 +86,10 @@ class Game():
     def run(self):
         while self.running:
             dt = self.clock.tick(FPS) / 1000  # Convert milliseconds to seconds
+            # for timer
+
             # update
             self.player.update(dt)
-            # check out of bounds
-            if self.player.pos.y > SCREEN_HEIGHT + 50:
-                # auto destroy and spawn player
-                self.spawn_player()
 
             for entity in self.entities:
                 entity.update(dt)

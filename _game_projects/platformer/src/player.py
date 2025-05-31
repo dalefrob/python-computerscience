@@ -1,5 +1,6 @@
 import pygame as pg
 from pathlib import Path
+from src.engine import Timer
 from src.enemy import *
 
 # resources
@@ -41,6 +42,9 @@ class Player(PhysicsEntity):
         self.jump_pressed = False
         self.jump_strength = 265
         self.jump_frames = 0
+
+        self.dead = False
+        self.respawn_timer = Timer(2000, self.game.spawn_player, False, False)
 
 
     def update(self, dt):
@@ -86,6 +90,11 @@ class Player(PhysicsEntity):
                         self.jump(0.75)
                         coll.bopped()
 
+        # check out of bounds
+        self.respawn_timer.update()
+        if self.pos.y > pg.display.get_window_size()[1] + 50 and not self.dead:
+            self.die()
+
         # animate frames
         now = pg.time.get_ticks()
         if now - self.last_update > 60:  # 700 ms
@@ -97,6 +106,11 @@ class Player(PhysicsEntity):
         if self.current_animation != next_animation_name or force:
             self.frame_index = 0
             self.current_animation = next_animation_name
+
+
+    def die(self):
+        self.dead = True
+        self.respawn_timer.activate()
 
 
     def jump(self, strength_mod=1.0):

@@ -1,6 +1,5 @@
 import pygame as pg
 
-
 class Animation():
     """
     A data class to hold information for an animation
@@ -103,7 +102,7 @@ class AnimationPlayer():
 
 
 class Timer():
-    def __init__(self, duration, func=None, repeat=None, autostart=False):
+    def __init__(self, duration, func=None, repeat=False, autostart=False):
         self.duration = duration
         self.start_time = 0
         self.active = False
@@ -113,7 +112,7 @@ class Timer():
         if autostart:
             self.activate()
     
-    
+
     def __bool__(self):
         return self.active
 

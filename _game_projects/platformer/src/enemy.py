@@ -28,18 +28,9 @@ class Enemy(PhysicsEntity):
         anim_player.add_animation("idle", Animation(idle, 14, 1))
         anim_player.add_animation("run", Animation(run, 16, 1))
         anim_player.add_animation("hit", Animation(hit, 5, 1, False), True)
+        anim_player.on_animation_finished = self.on_animation_finished
         self.anim_player = anim_player
 
-        self._animations = {
-            "idle": load_animation_frames(idle, 14, 1),
-            "run": load_animation_frames(run, 16, 1),
-            "hit": load_animation_frames(hit, 5, 1)
-        }
-        
-        self.current_animation = "idle"
-        self.playing = True
-        self.last_update = 0
-        self.frame_index = 0
         self.direction = -1
 
         # attributes
@@ -71,12 +62,6 @@ class Enemy(PhysicsEntity):
         self.move_and_collide(dt)
 
         self.anim_player.update()
-        #self.animations[self.current_animation].update(dt)
-        # animate frames
-        # now = pg.time.get_ticks()
-        # if now - self.last_update > 60 and self.playing:  # 700 ms
-        #     self.animate(dt)
-        #     self.last_update = now  # Reset the timer
 
 
     def run(self, dt):
@@ -98,7 +83,7 @@ class Enemy(PhysicsEntity):
             self.velocity.y = -200
             self.disable_collision = True
             return
-        self.change_animation("hit", True)
+        self.anim_player.change_animation("hit", True)
         self.current_state = self.HIT
 
 
@@ -108,22 +93,10 @@ class Enemy(PhysicsEntity):
             self.current_animation = next_animation_name
 
 
-    def on_hit_anim_ended(self):
-        self.current_state = self.RUN
-        self.change_animation("run")
-
-
-    def on_animation_ended(self):
-        if self.current_animation == "hit":
+    def on_animation_finished(self):
+        if self.anim_player.current_animation == "hit":
             self.current_state = self.RUN
-            self.change_animation("run")
-
-
-    def animate(self, dt):
-        self.frame_index += 1
-        if self.frame_index > len(self._animations[self.current_animation]) - 1:
-            self.on_animation_ended()
-            self.frame_index = 0
+            self.anim_player.change_animation("run")
 
 
     def render(self, surface, offset):
