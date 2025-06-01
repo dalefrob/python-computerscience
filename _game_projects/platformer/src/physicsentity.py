@@ -28,6 +28,7 @@ class PhysicsEntity():
 
         # spatial vars
         self.pos = pg.Vector2(pos)
+        self.last_pos = pg.Vector2(pos) # Last pos to check for prev states
         self.size = size
         self.direction = 1
         self.velocity = pg.Vector2(0,0)
@@ -47,7 +48,7 @@ class PhysicsEntity():
 
     def ready(self):
         pass
-    
+
 
     def update(self, dt):
         pass
@@ -55,6 +56,8 @@ class PhysicsEntity():
 
     def move_and_collide(self, dt):
         # reset collision test
+        self.last_pos = self.pos
+        
         self.on_wall = False
         self.on_floor = False
         self.on_ceiling = False

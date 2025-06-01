@@ -25,6 +25,20 @@ class Player(PhysicsEntity):
         path_run = path / "../assets/Main Characters/Ninja Frog/Run (32x32).png"
         path_jump = path / "../assets/Main Characters/Ninja Frog/Jump (32x32).png"
         path_fall = path / "../assets/Main Characters/Ninja Frog/Fall (32x32).png"
+        path_hit = path / "../assets/Main Characters/Ninja Frog/Hit (32x32).png"
+
+
+        anim_player = AnimationPlayer()
+        anim_player.add_animation("idle", Animation(path_idle, 14, 1), True)
+        anim_player.add_animation("run", Animation(path_run, 16, 1))
+        anim_player.add_animation("run", Animation(path_jump, 16, 1, False))
+        anim_player.add_animation("run", Animation(path_fall, 16, 1, False))
+        anim_player.add_animation("hit", Animation(path_hit, 5, 1, False))
+        anim_player.on_animation_finished = self.on_animation_finished
+        self.anim_player = anim_player
+
+        # TODO remove obsolete animation 
+
 
         self.animations = {
             "idle": load_animation_frames(path_idle, 11, 1),
@@ -86,9 +100,15 @@ class Player(PhysicsEntity):
             for coll in self.last_collisions:
                 if isinstance(coll, Enemy):
                     assert isinstance(coll, Enemy)
-                    if not coll.is_dead() and self.current_animation == "fall": # for now this prevents multiple collisions
-                        self.jump(0.75)
+                    if coll.is_dead():
+                        continue
+                    can_bop = self.velocity.y > 1.0 and (self.last_pos.y + self.size[1]) < (coll.pos.y + coll.size[1])
+                    if can_bop: # for now this prevents multiple collisions
+                        self.jump(0.5)
                         coll.bopped()
+                    else:
+                        if coll.is_deadly_to_touch():
+                            print("Enemy hit Player!")
 
         # check out of bounds
         self.respawn_timer.update()
@@ -108,6 +128,10 @@ class Player(PhysicsEntity):
             self.current_animation = next_animation_name
 
 
+    def on_animation_finished(self):
+        pass
+
+
     def die(self):
         self.dead = True
         self.respawn_timer.activate()
@@ -118,7 +142,7 @@ class Player(PhysicsEntity):
         self.jump_frames = 0
 
         self.on_floor = False
-        self.velocity[1] -= self.jump_strength * strength_mod
+        self.velocity[1] = -self.jump_strength * strength_mod
 
 
     def add_extra_jumpheight(self):

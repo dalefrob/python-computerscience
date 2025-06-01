@@ -35,6 +35,7 @@ class Enemy(PhysicsEntity):
 
         # attributes
         self.health = 3
+        self.deadly_to_touch = True
 
 
     def ready(self):
@@ -44,6 +45,12 @@ class Enemy(PhysicsEntity):
 
     def is_dead(self):
         return self.health <= 0
+
+
+    def is_deadly_to_touch(self):
+        if self.is_dead():
+            return False
+        return self.deadly_to_touch
 
 
     def update(self, dt):
@@ -76,6 +83,7 @@ class Enemy(PhysicsEntity):
 
 
     def bopped(self):
+        self.deadly_to_touch = False
         self.health -= 1
         if self.is_dead():
             self.current_state = self.DEAD
@@ -95,6 +103,7 @@ class Enemy(PhysicsEntity):
 
     def on_animation_finished(self):
         if self.anim_player.current_animation == "hit":
+            self.deadly_to_touch = True
             self.current_state = self.RUN
             self.anim_player.change_animation("run")
 
@@ -102,13 +111,15 @@ class Enemy(PhysicsEntity):
     def render(self, surface, offset):
         adjusted_rect = self.rect().move(-offset.x, -offset.y)
         pg.draw.rect(surface, (0, 255, 0), adjusted_rect, 1)
-        #img_to_blit = self.animations[self.current_animation].get_animation_frame()
+        
         img_to_blit = self.anim_player.get_surface()
         img_to_blit = pg.transform.flip(img_to_blit, self.direction == 1, False)
         img_to_blit = pg.transform.rotate(img_to_blit, self.rotation)
+
         surface.blit(img_to_blit, adjusted_rect.move(self.render_offset[0], self.render_offset[1]))
 
         self.render_debug(surface, offset)
+
 
     def __str__(self):
         return "Mushroom"

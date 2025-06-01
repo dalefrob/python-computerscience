@@ -88,7 +88,7 @@ class AnimationPlayer():
 
     def change_animation(self, next_animation_name, force=False):
         if self.current_animation != next_animation_name or force:
-            self.frame_index = 0
+            self.get_current_animation().frame_index = 0
             self.current_animation = next_animation_name
             self.on_animation_changed()
 
