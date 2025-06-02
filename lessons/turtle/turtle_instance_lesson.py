@@ -34,7 +34,6 @@ for i in range(2):        # 2
 CIRCLESIZE = 25
 for i in range(5):
     for j in range(5):
-        leo.pensize(3)
         leo.penup()
         leo.goto((CIRCLESIZE*2) * i, (CIRCLESIZE*2) * j)
         leo.pendown()
