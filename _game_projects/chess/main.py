@@ -53,95 +53,6 @@ def load_piece_images(square_size = 32):
     return result
 
 
-def get_possible_moves(piece, from_index):
-    result = []
-    piece_color = piece & PIECE_COLOR_MASK
-    piece_type = piece & PIECE_TYPE_MASK
-    # TODO match piece
-    vert_flip = -1 if piece_color == Piece.Black else 1
-    match piece_type:
-        case Piece.Pawn:
-            result.append(from_index + (8 * vert_flip))
-        case Piece.Bishop:
-            result.extend(get_diagonal_moves(from_index))
-        case Piece.Rook:
-            result.extend(get_straight_moves(from_index))
-        case Piece.Queen:
-            result.extend(get_diagonal_moves(from_index))
-            result.extend(get_straight_moves(from_index))
-    print(from_index, result)
-    return result
-
-
-def get_pawn_moves():
-    pass
-
-
-def get_diagonal_moves(from_index):
-    result = []
-    # nw
-    for i in range(1, 8):
-        test_index = from_index + (i * -9)
-        if 0 <= test_index < 64:
-            result.append(test_index)
-        if test_index % 8 == 0:
-            break
-    # ne
-    for i in range(1, 8):
-        test_index = from_index + (i * -7)
-        if 0 <= test_index < 64:
-            result.append(test_index)
-        if (test_index - 7) % 8 == 0:
-            break
-    # sw
-    for i in range(1, 8):
-        test_index = from_index + (i * 7)
-        if 0 <= test_index < 64:
-            result.append(test_index)
-        if test_index % 8 == 0:
-            break
-    # se
-    for i in range(1, 8):
-        test_index = from_index + (i * 9)
-        if 0 <= test_index < 64:
-            result.append(test_index)
-        if (test_index - 7) % 8 == 0:
-            break
-
-    return result
-
-
-def get_straight_moves(from_index):
-    result = []
-    # left
-    for i in range(1, 8):
-        test_index = from_index - i
-        if 0 <= test_index < 63:
-            result.append(test_index)
-        if test_index % 8 == 0:
-            break
-    # right
-    for i in range(1, 8):
-        test_index = from_index + i
-        if 0 <= test_index < 63:
-            result.append(test_index)
-        if (test_index - 7) % 8 == 0:
-            break
-    # up
-    for i in range(1, 8):
-        test_index = from_index - (i * 8)
-        if 0 <= test_index < 63:
-            result.append(test_index)
-
-    # down
-    for i in range(1, 8):
-        test_index = from_index + (i * 8)
-        if 0 <= test_index < 63:
-            result.append(test_index)
-
-
-    return result
-
 
 class Board():
     """
@@ -161,6 +72,9 @@ class Board():
         self.selected_piece = 0
         self.selected_index = -1
 
+        self.last_possible_moves = []
+
+
     def get_piece_name(self, piece : Piece):
         piece_color = piece & PIECE_COLOR_MASK
         piece_type = piece & PIECE_TYPE_MASK
@@ -171,16 +85,156 @@ class Board():
         piece = self.squares[square]
         if piece > 0:
             print(self.get_piece_name(piece))
+        return piece
 
 
-    def file_rank_to_index(self, file, rank):
+    def file_rank_to_square(self, file, rank):
         return (rank * 8) + file
 
 
-    def index_to_file_rank(self, index : int):
-        file = index % 8 # X
-        rank = index // 8 # Y
+    def get_file(self, square):
+        return square % 8 # X
+    
+
+    def get_rank(self, square):
+        return square // 8 # Y
+
+
+    def get_file_rank(self, square : int):
+        file = self.get_file(square)
+        rank = self.get_rank(square)
         return (file, rank)
+
+
+    def is_square_in_board(self, square) -> bool:
+        return 0 <= square < 64 
+
+
+    def can_capture(self, first, second):
+        # Basic capture - Doesn't account for any other rules
+        first_color = first & PIECE_COLOR_MASK
+        second_color = second & PIECE_COLOR_MASK
+        return first_color != second_color
+
+
+    def get_possible_moves(self, piece, from_index):
+        result = []
+        piece_color = piece & PIECE_COLOR_MASK
+        piece_type = piece & PIECE_TYPE_MASK
+        vert_flip = -1 if piece_color == Piece.Black else 1
+        match piece_type:
+            case Piece.Pawn:
+                result.append(from_index + (8 * vert_flip))
+            case Piece.Bishop:
+                result.extend(self.get_diagonal_moves(piece, from_index))
+            case Piece.Rook:
+                result.extend(self.get_straight_moves(piece, from_index))
+            case Piece.Queen:
+                result.extend(self.get_diagonal_moves(piece, from_index))
+                result.extend(self.get_straight_moves(piece, from_index))
+        print(from_index, result)
+        self.last_possible_moves = result
+        return result
+
+
+    def get_diagonal_moves(self, piece, from_index):
+        result = []
+        # nw
+        for i in range(1, 8):
+            test_index = from_index + (i * -9)
+            if self.is_square_in_board(test_index):
+                # If theres a piece at location
+                dest_piece = self.squares[test_index]
+                if dest_piece > 0:
+                    if not self.can_capture(piece, dest_piece):
+                        break
+                    result.append(test_index)
+                    break
+                    # empty square
+                result.append(test_index)
+                
+            if self.get_file(test_index) == 0:
+                break
+
+        # ne
+        for i in range(1, 8):
+            test_index = from_index + (i * -7)
+            if self.is_square_in_board(test_index):
+                # If theres a piece at location
+                dest_piece = self.squares[test_index]
+                if dest_piece > 0:
+                    if not self.can_capture(piece, dest_piece):
+                        break
+                    result.append(test_index)
+                    break
+                    # empty square
+                result.append(test_index)
+            if (test_index - 7) % 8 == 0:
+                break
+        # sw
+        for i in range(1, 8):
+            test_index = from_index + (i * 7)
+            if self.is_square_in_board(test_index):
+                # If theres a piece at location
+                dest_piece = self.squares[test_index]
+                if dest_piece > 0:
+                    if not self.can_capture(piece, dest_piece):
+                        break
+                    result.append(test_index)
+                    break
+                    # empty square
+                result.append(test_index)
+            if test_index % 8 == 0:
+                break
+        # se
+        for i in range(1, 8):
+            test_index = from_index + (i * 9)
+            if self.is_square_in_board(test_index):
+                # If theres a piece at location
+                dest_piece = self.squares[test_index]
+                if dest_piece > 0:
+                    if not self.can_capture(piece, dest_piece):
+                        break
+                    result.append(test_index)
+                    break
+                    # empty square
+                result.append(test_index)
+            if (test_index - 7) % 8 == 0:
+                break
+
+        return result
+
+
+    def get_straight_moves(self, piece, from_index):
+        result = []
+        # left
+        for i in range(1, 8):
+            test_index = from_index - i
+            if 0 <= test_index < 63:
+                result.append(test_index)
+            if test_index % 8 == 0:
+                break
+        # right
+        for i in range(1, 8):
+            test_index = from_index + i
+            if 0 <= test_index < 63:
+                result.append(test_index)
+            if (test_index - 7) % 8 == 0:
+                break
+        # up
+        for i in range(1, 8):
+            test_index = from_index - (i * 8)
+            if 0 <= test_index < 63:
+                result.append(test_index)
+
+        # down
+        for i in range(1, 8):
+            test_index = from_index + (i * 8)
+            if 0 <= test_index < 63:
+                result.append(test_index)
+
+
+        return result
 
 
 
@@ -213,7 +267,9 @@ class BoardVisual():
             col, row = offset_x // self.square_size, offset_y // self.square_size
             square = row * 8 + col
             print(f"square: {square} piece: {self.board.squares[square]}")
-            self.board.query_square(square)
+            piece = self.board.query_square(square)
+            if piece > 0:
+                self.board.get_possible_moves(piece, square)
 
 
     def get_screen_position(self, col, row):
@@ -223,7 +279,7 @@ class BoardVisual():
         return (x, y)
 
 
-    def index_to_rowcol(self, index):
+    def index_to_colrow(self, index):
         row = index % 8
         col = index // 8
         return col, row
@@ -236,12 +292,16 @@ class BoardVisual():
 
     def render_board(self, dest_surface : pg.Surface):
         for index in range(len(self.board.squares)):
-            col, row = self.index_to_rowcol(index)
+            col, row = self.index_to_colrow(index)
             rect = self.get_square_rect(row, col)
 
             surf = pg.Surface((self.square_size, self.square_size))
             is_light_square = (row + col) % 2 != 0
             square_color = LIGHTCOLOR if is_light_square else DARKCOLOR
+            
+            if index in board.last_possible_moves:
+                square_color = pg.Color(square_color) % pg.Color(180, 230, 180)
+
             surf.fill(square_color)
 
             # board
@@ -250,12 +310,13 @@ class BoardVisual():
             # piece
             piece = self.board.squares[index]
             if piece > 0:
-                surf = self.piece_images[piece]
-                dest_surface.blit(surf, rect)
+                piece_surf = self.piece_images[piece]
+                dest_surface.blit(piece_surf, rect)
 
             # debugging
             text = font.render(f"{index}", True, (0, 0, 0))
             dest_surface.blit(text, rect)
+            
             
 
 # ------ START PROGRAM -------
