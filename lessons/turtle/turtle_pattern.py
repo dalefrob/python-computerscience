@@ -40,5 +40,5 @@ for i in range(s.window_width() // CIRCLE_SIZE):
             turtle.circle(CIRCLE_SIZE / 4)
             turtle.end_fill()
         is_black = not is_black
-    
+
 turtle.done()
