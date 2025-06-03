@@ -14,11 +14,6 @@ SCREENWIDTH = 800
 SCREENHEIGHT = 600
 SQUARESIZE = 64
 
-pg.init()
-screen = pg.display.set_mode((800,600))
-pg.display.set_caption("Chess")
-font = pg.font.SysFont(None, 18)
-
 
 class Piece(IntFlag):
     NoPiece = 0
@@ -109,6 +104,13 @@ class Board():
 
     def is_square_in_board(self, square) -> bool:
         return 0 <= square < 64 
+
+
+    def try_move(self, from_square, to_square):
+        piece_temp = self.squares[from_square]
+        self.squares[to_square] = piece_temp
+        self.squares[from_square] = Piece.NoPiece
+        return True
 
 
     def can_capture(self, first, second):
@@ -213,10 +215,13 @@ class Board():
             test_index = from_index - i
             if self.is_square_in_board(test_index):
                 dest_piece = self.squares[test_index]
-                if not self.can_capture(piece, dest_piece):
+                if dest_piece > 0:
+                    if not self.can_capture(piece, dest_piece):
+                        break
+                    result.append(test_index)
                     break
+                # empty square
                 result.append(test_index)
-                break
             if test_index % 8 == 0:
                 break
         # right
@@ -224,10 +229,13 @@ class Board():
             test_index = from_index + i
             if self.is_square_in_board(test_index):
                 dest_piece = self.squares[test_index]
-                if not self.can_capture(piece, dest_piece):
+                if dest_piece > 0:
+                    if not self.can_capture(piece, dest_piece):
+                        break
+                    result.append(test_index)
                     break
+                # empty square
                 result.append(test_index)
-                break
             if (test_index - 7) % 8 == 0:
                 break
         # up
@@ -235,21 +243,26 @@ class Board():
             test_index = from_index - (i * 8)
             if self.is_square_in_board(test_index):
                 dest_piece = self.squares[test_index]
-                if not self.can_capture(piece, dest_piece):
+                if dest_piece > 0:
+                    if not self.can_capture(piece, dest_piece):
+                        break
+                    result.append(test_index)
                     break
+                # empty square
                 result.append(test_index)
-                break
 
         # down
         for i in range(1, 8):
             test_index = from_index + (i * 8)
             if self.is_square_in_board(test_index):
                 dest_piece = self.squares[test_index]
-                if not self.can_capture(piece, dest_piece):
+                if dest_piece > 0:
+                    if not self.can_capture(piece, dest_piece):
+                        break
+                    result.append(test_index)
                     break
+                # empty square
                 result.append(test_index)
-                break
-
 
         return result
 
@@ -265,7 +278,9 @@ class BoardVisual():
         self.square_size = square_size
         self.piece_images = load_piece_images(square_size)
 
-        self.clicked_square = None
+        # Selection
+        self.selected_square = None
+        self.selected_piece = None
     
 
     def get_rect(self):
@@ -276,19 +291,44 @@ class BoardVisual():
 
 
     def handle_mouse_event(self, mouse_event):
-        if mouse_event.type == pg.MOUSEBUTTONDOWN:
-            self.clicked_square = self.index_from_screen_pos(mouse_event.pos)
-        elif mouse_event.type == pg.MOUSEBUTTONUP:
-            mouse_up_square = self.index_from_screen_pos(mouse_event.pos)
-            if mouse_up_square == self.clicked_square:
-                self.on_square_selected(mouse_up_square)
+        if mouse_event.type == pg.MOUSEBUTTONUP:
+            # Left mouse button
+            if mouse_event.button == 1:
+                mouse_up_square = self.index_from_screen_pos(mouse_event.pos)
+                # deselect selected square
+                if self.selected_square == mouse_up_square:
+                    self.deselect_square()
+                # select
+                elif self.selected_square == None:
+                    self.select_square(mouse_up_square)
+                # try move
+                else:
+                    self.try_move(mouse_up_square)
+            if mouse_event.button == 3:
+                # Right mouse button
+                self.deselect_square()
+
+
+    def deselect_square(self):
+        print("Deselect")
+        self.selected_square = None
+        self.selected_piece = None
+        self.board.last_possible_moves.clear()
         
-        
-    def on_square_selected(self, square):
-        print(f"square: {square} piece: {self.board.squares[square]}")
+
+    def select_square(self, square):
         piece = self.board.query_square(square)
         if piece > 0:
+            self.selected_square = square
+            print(f"Selected piece: {self.board.squares[square]} on square: {square}")
+            self.selected_piece = piece
             self.board.get_possible_moves(piece, square)
+
+
+    def try_move(self, to_square):
+        print(f"Try move to {to_square}")
+        if self.board.try_move(self.selected_square, to_square):
+            self.deselect_square()
 
 
     def index_from_screen_pos(self, screen_pos):
@@ -349,6 +389,12 @@ class BoardVisual():
 
 # ------ START PROGRAM -------
 
+pg.init()
+screen = pg.display.set_mode((800,600))
+pg.display.set_caption("Chess")
+font = pg.font.SysFont(None, 18)
+clock = pg.Clock()
+
 board = Board()
 board_visual = BoardVisual(board, 48)
 
@@ -365,6 +411,7 @@ def main():
             if event.type == pg.QUIT:
                 running = False
                 pg.quit()
+        clock.tick(15)
 
 
 if __name__ == "__main__":
