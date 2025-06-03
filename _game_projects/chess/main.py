@@ -65,9 +65,10 @@ class Board():
         # Add Some test pieces
         self.squares[19] = Piece.White | Piece.Bishop
         self.squares[33] = Piece.Black | Piece.Pawn
-        self.squares[34] = Piece.White | Piece.Pawn
+        self.squares[34] = Piece.White | Piece.Knight
         self.squares[51] = Piece.White | Piece.Rook
         self.squares[29] = Piece.Black | Piece.Queen
+        self.squares[53] = Piece.Black | Piece.King
 
         self.selected_piece = 0
         self.selected_index = -1
@@ -210,28 +211,44 @@ class Board():
         # left
         for i in range(1, 8):
             test_index = from_index - i
-            if 0 <= test_index < 63:
+            if self.is_square_in_board(test_index):
+                dest_piece = self.squares[test_index]
+                if not self.can_capture(piece, dest_piece):
+                    break
                 result.append(test_index)
+                break
             if test_index % 8 == 0:
                 break
         # right
         for i in range(1, 8):
             test_index = from_index + i
-            if 0 <= test_index < 63:
+            if self.is_square_in_board(test_index):
+                dest_piece = self.squares[test_index]
+                if not self.can_capture(piece, dest_piece):
+                    break
                 result.append(test_index)
+                break
             if (test_index - 7) % 8 == 0:
                 break
         # up
         for i in range(1, 8):
             test_index = from_index - (i * 8)
-            if 0 <= test_index < 63:
+            if self.is_square_in_board(test_index):
+                dest_piece = self.squares[test_index]
+                if not self.can_capture(piece, dest_piece):
+                    break
                 result.append(test_index)
+                break
 
         # down
         for i in range(1, 8):
             test_index = from_index + (i * 8)
-            if 0 <= test_index < 63:
+            if self.is_square_in_board(test_index):
+                dest_piece = self.squares[test_index]
+                if not self.can_capture(piece, dest_piece):
+                    break
                 result.append(test_index)
+                break
 
 
         return result
@@ -247,6 +264,8 @@ class BoardVisual():
         self.board = board
         self.square_size = square_size
         self.piece_images = load_piece_images(square_size)
+
+        self.clicked_square = None
     
 
     def get_rect(self):
@@ -257,7 +276,19 @@ class BoardVisual():
 
 
     def handle_mouse_event(self, mouse_event):
-        self.index_from_screen_pos(mouse_event.pos)
+        if mouse_event.type == pg.MOUSEBUTTONDOWN:
+            self.clicked_square = self.index_from_screen_pos(mouse_event.pos)
+        elif mouse_event.type == pg.MOUSEBUTTONUP:
+            mouse_up_square = self.index_from_screen_pos(mouse_event.pos)
+            if mouse_up_square == self.clicked_square:
+                self.on_square_selected(mouse_up_square)
+        
+        
+    def on_square_selected(self, square):
+        print(f"square: {square} piece: {self.board.squares[square]}")
+        piece = self.board.query_square(square)
+        if piece > 0:
+            self.board.get_possible_moves(piece, square)
 
 
     def index_from_screen_pos(self, screen_pos):
@@ -266,10 +297,7 @@ class BoardVisual():
             offset_x, offset_y = (screen_pos[0] - rect.topleft[0], screen_pos[1] - rect.topleft[1])
             col, row = offset_x // self.square_size, offset_y // self.square_size
             square = row * 8 + col
-            print(f"square: {square} piece: {self.board.squares[square]}")
-            piece = self.board.query_square(square)
-            if piece > 0:
-                self.board.get_possible_moves(piece, square)
+            return square
 
 
     def get_screen_position(self, col, row):
