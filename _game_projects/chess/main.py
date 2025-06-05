@@ -107,6 +107,9 @@ class Board():
 
 
     def try_move(self, from_square, to_square):
+        if not to_square in self.last_possible_moves:
+            print("Invalid move")
+            return
         piece_temp = self.squares[from_square]
         self.squares[to_square] = piece_temp
         self.squares[from_square] = Piece.NoPiece
