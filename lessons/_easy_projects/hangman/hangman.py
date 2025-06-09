@@ -1,7 +1,14 @@
 import random
 
 # List of possible words
-words = ["millipede", "pikachu", "doraemon", "crocodile"]
+words = []
+
+with open("words.txt", "r") as file:
+    line = file.readline()
+    while line:
+        # Process the line here
+        words.append(line.strip())  # Remove trailing newline character
+        line = file.readline()
 
 # Randomly select a word
 secret_word = random.choice(words)
