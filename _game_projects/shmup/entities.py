@@ -1,4 +1,5 @@
 import random
+import math
 import pygame as pg
 from resources import *
 from statemachine import *
@@ -224,7 +225,7 @@ class EnemyShip(Ship):
 
         # state machine setup
         sm = StateMachine(self)
-        sm.add_state("zigzag", ZigzagMovementState(), True)
+        sm.add_state("zigzag", SweepMovementState(), True)
 
         self.state_machine = sm
     
@@ -269,16 +270,38 @@ class ZigzagMovementState(ShipMovementState):
     def __init__(self, move_left = False):
         super().__init__()
         self.move_dir_x = -1 if move_left else 1
-        self.shoot_timer = Timer(2000, self.flip_x, True, True)
+        self.flip_timer = Timer(2000, self.flip_x, True, True)
     
     def update(self, dt):
-        self.shoot_timer.update()
+        self.flip_timer.update()
         ctx = self.get_context()
         ctx.velocity = pg.Vector2(20 * self.move_dir_x, 20)
     
     def flip_x(self):
         self.move_dir_x *= -1
 
+
+class SweepMovementState(ShipMovementState):
+    def __init__(self, move_left = False):
+        super().__init__()
+        self.move_dir_x = -1 if move_left else 1
+        self.time = 0
+
+        # params
+        self.x_magnitude = 170
+        self.y_magnitude = 0    # make 0 to do a horizontal sweep
+        self.x_frequency = 500
+        self.y_frequency = 50
+
+        self.const_y = 80       # constant vertical movement
+        self.speed = 2          # speed of sin/cos wave traversion
+    
+    def update(self, dt):
+        self.time += self.speed
+        x = self.x_magnitude * math.sin(self.time / self.x_frequency)
+        y = self.y_magnitude * math.cos(self.time / self.y_frequency)
+        ctx = self.get_context()
+        ctx.velocity = pg.Vector2(x * self.move_dir_x, self.const_y + y)
 
 
 
