@@ -1,11 +1,11 @@
 import random
 from collections import deque
+from helpers import *
 from bloke import *
 from spells import Spell
 
 blokes = []
 turn_queue = deque()
-
 
 
 def main():
@@ -39,7 +39,7 @@ def main_loop():
   """
   The main game loop until only one bloke remains
   """
-  print("The battle begins!")
+  print(colored(255, 0, 255, "The battle begins!"))
   gameover = False
   while(not gameover):
     # If turns remain, run them
@@ -49,13 +49,14 @@ def main_loop():
         do_turn(bloke)
     else:
       winning_bloke = turn_queue[0]
-      print(f"Winner: {winning_bloke.name}")
+      print(colored(255, 0, 255, f"Winner: {winning_bloke.name}"))
       gameover = True
 
 
 
 def do_turn(bloke : Bloke):
-  print(f"{bloke.name}'s turn!")
+  turn_string = colored(0, 100, 200, f"\n{bloke.name}'s turn!")
+  print(turn_string)
 
   if random.random() < 0.2:
     do_spell(bloke)
@@ -114,8 +115,7 @@ def do_melee(attacker : Bloke):
 # Signal Callbacks
 
 def on_bloke_took_damage(bloke, amount, element):
-  element_string = "" if not element else element + " "
-  print(f"{bloke.name} took {amount} {element_string}damage!")
+  pass
 
 
 def on_bloke_defeated(bloke):

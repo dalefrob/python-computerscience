@@ -178,8 +178,8 @@ class Ship(pg.sprite.Sprite):
 
 
 class PlayerShip(Ship):
-    def __init__(self, image, position, *groups):
-        super().__init__(image, position, *groups)
+    def __init__(self, image, position):
+        super().__init__(image, position, ship_group)
     
 
     def update(self, dt):
@@ -217,15 +217,20 @@ class EnemyShip(Ship):
     """
     Base enemy ship.
     """
-    def __init__(self, image, position, *groups):
+    def __init__(self, image, position, property_dict):
         flipped_image = pg.transform.flip(image, False, True)
-        super().__init__(flipped_image, position, *groups)
+        super().__init__(flipped_image, position, ship_group)
 
         self.shoot_timer = Timer(random.randint(1000, 3000), self.shoot, True, True)
 
+        # set properties
+        self.flipped = False
+        if "flipped" in property_dict:
+            self.flipped = property_dict["flipped"]
+
         # state machine setup
         sm = StateMachine(self)
-        sm.add_state("zigzag", SweepMovementState(), True)
+        sm.add_state("zigzag", SweepMovementState(self.flipped), True)
 
         self.state_machine = sm
     
@@ -267,9 +272,9 @@ class ShipMovementState(State):
 
 
 class ZigzagMovementState(ShipMovementState):
-    def __init__(self, move_left = False):
+    def __init__(self, flipped = False):
         super().__init__()
-        self.move_dir_x = -1 if move_left else 1
+        self.move_dir_x = -1 if flipped else 1
         self.flip_timer = Timer(2000, self.flip_x, True, True)
     
     def update(self, dt):
@@ -282,9 +287,9 @@ class ZigzagMovementState(ShipMovementState):
 
 
 class SweepMovementState(ShipMovementState):
-    def __init__(self, move_left = False):
+    def __init__(self, flipped = False):
         super().__init__()
-        self.move_dir_x = -1 if move_left else 1
+        self.move_dir_x = -1 if flipped else 1
         self.time = 0
 
         # params

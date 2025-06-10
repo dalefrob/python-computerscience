@@ -50,10 +50,10 @@ class WaveManager():
         self.timer = Timer(1000, self.on_timer_tick, True, True)
         self.ticks : int = 0
         self.seq = {
-            1: [("EnemyShip", (80, 0)), ("EnemyShip", (120, 0)), ("EnemyShip", (160, 0)), ("EnemyShip", (200, 0))], # At 5 seconds, spawn an enemy ship at (40, 0)
-            5: [("EnemyShip", (40, 0))], # At 5 seconds, spawn an enemy ship at (40, 0)
-            8: [("EnemyShip", (40, 0)), ("EnemyShip", (80, 0))], # At 8 seconds, spawn two enemy ships at (40, 0) and (80, 0)
-            12: [("EnemyShip", (40, 0)), ("EnemyShip", (80, 0)), ("EnemyShip", (120, 0))],
+            1: [("EnemyShip", (80, 0), {}), ("EnemyShip", (120, 0), {}), ("EnemyShip", (160, 0), { "flipped": True }), ("EnemyShip", (200, 0), { "flipped": True })], # At 5 seconds, spawn an enemy ship at (40, 0)
+            5: [("EnemyShip", (200, 0), { "flipped": True })], # At 5 seconds, spawn an enemy ship at (40, 0)
+            8: [("EnemyShip", (40, 0), {}), ("EnemyShip", (80, 0), {})], # At 8 seconds, spawn two enemy ships at (40, 0) and (80, 0)
+            12: [("EnemyShip", (40, 0), {}), ("EnemyShip", (80, 0), {}), ("EnemyShip", (120, 0), {})],
         }
 
 
@@ -69,13 +69,13 @@ class WaveManager():
                 arg1 = task[0]
                 match arg1:
                     case "EnemyShip":
-                        self.spawn_ship(arg1, task[1])                
+                        self.spawn_ship(arg1, task[1], task[2])                
     
 
-    def spawn_ship(self, ship, position):
-        print("Spawn enemy ship!")
+    def spawn_ship(self, ship, position, property_dict = {}):
+        print("Spawn enemy ship!", property_dict)
         img = assets["ship_sheet"].subsurface(pg.Rect(0, 32 * 3, 32, 32))
-        enemy_ship = EnemyShip(img, position, ship_group)
+        enemy_ship = EnemyShip(img, position, property_dict)
         enemy_ship.on_destroyed = handle_enemy_destroyed
 
 
@@ -111,12 +111,7 @@ def handle_enemy_destroyed():
 
 # ships
 ship_image = assets["ship_sheet"].subsurface(pg.Rect(0, 0, 32, 32))
-ship = PlayerShip(ship_image, (140, 500), ship_group)
-
-for i in range(2,6):
-    enemy_ship_image = assets["ship_sheet"].subsurface(pg.Rect(0, 32 * 3, 32, 32))
-    enemy_ship = EnemyShip(enemy_ship_image, (40 * i, 64), ship_group)
-    enemy_ship.on_destroyed = handle_enemy_destroyed
+ship = PlayerShip(ship_image, (140, 500))
 
 
 running = True
