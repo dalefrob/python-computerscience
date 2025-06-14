@@ -7,7 +7,6 @@ from spells import Spell
 blokes = []
 turn_queue = deque()
 
-
 def main():
     setup()
     main_loop()
@@ -17,14 +16,19 @@ def setup():
     """
     Called once before the simluation starts to set things up
     """
-    blokes.append(Bloke("Ching"))
-    blokes.append(Bloke("Ryan"))
-    blokes.append(Bloke("Cindy"))
-    blokes.append(Bloke("David"))
-    blokes.append(Bloke("Ethan"))
-    blokes.append(Bloke("Ivy"))
-    blokes.append(Bloke("Mimi"))
-    blokes.append(Bloke("Boa"))
+    #blokes.append(Bloke("Ching"))
+    blokes.append(Bloke("Siren Head"))
+    blokes.append(Bloke("Godzilla"))
+    blokes.append(Bloke("Attack Titan"))
+    sephi = Bloke("Sephiroth")
+    sephi.equip_item(make_ring())
+    blokes.append(sephi)
+    #blokes.append(Bloke("Mimi"))
+    #blokes.append(Bloke("Boa"))
+    orion = Bloke("Orion the Destroyer")
+    orion.spells.append(("doomsday", 15))
+    blokes.append(orion)
+
 
     bloke: Bloke
     for bloke in blokes:
@@ -36,21 +40,22 @@ def main_loop():
     """
     The main game loop until only one bloke remains
     """
-    print(colored(255, 0, 255, "\n*** WELCOME TO BLOKE BATTLE! ***"))
+    print(colored(MAGENTA, "\n*** WELCOME TO BLOKE BATTLE! ***"))
     for bloke in blokes:
         print(bloke)
     print("---------------------")
-    print(colored(255, 0, 255, "The battle begins!\n"))
+    print(colored(MAGENTA, "The battle begins!\n"))
+
     gameover = False
     while (not gameover):
         # If turns remain, run them
         if len(turn_queue) > 1:
             bloke: Bloke = turn_queue.popleft()
-            if bloke.can_act():
+            if not bloke.defeated:
                 do_turn(bloke)
         else:
             winning_bloke = turn_queue[0]
-            print(colored(255, 0, 255, f"Winner: {winning_bloke.name}"))
+            print(colored(MAGENTA, f"🏆  Winner: {winning_bloke.name}"))
             gameover = True
 
 
@@ -61,20 +66,23 @@ def on_bloke_defeated(bloke):
 
 def do_turn(bloke: Bloke):
     new_defeated.clear()
-    turn_string = colored(0, 100, 200, f"\n{bloke.name}'s turn!")
+    turn_string = colored(LIGHTBLUE, f"\n{bloke.name}'s turn!")
     print(turn_string)
 
     bloke.new_turn() 
 
-    if not bloke.defeated: # may have been killed by at DOT
+    if bloke.can_act(): 
         if random.random() < 0.2:
             do_spell(bloke)
         else:
             do_melee(bloke)
+    else:
+        if not bloke.defeated:
+            print(f"{bloke.name} is unable to move!")
 
     # do a defeated check
     for def_bloke in new_defeated:
-        print(f"{def_bloke.name} was defeated.")
+        print(f"💀  {def_bloke.name} was defeated.")
 
     # If we're still alive, add oursleves back to the queue
     if not bloke.defeated:
@@ -101,11 +109,29 @@ def do_spell(attacker: Bloke):
 
 def do_melee(attacker: Bloke):
     defender = get_valid_targets(attacker)[0]
+    assert isinstance(defender, Bloke)
     if not defender:
         return
-    # Melee
+    
     print(f"{attacker.name} attacks {defender.name}!")
-    dmg = attacker.get_damage() + random.randrange(-2, 2)
+
+    # Test for dodge
+    dodge_chance = defender.get_dodge_chance()
+    roll = random.uniform(0, 100)
+    if roll < dodge_chance:
+        print(colored(GRAY, f"{defender.name} dodged the attack."))
+        return
+
+    # Assume hit --
+    dmg = attacker.get_damage()
+
+    # Trigger ON_HIT procs
+    for proc in attacker.item.get_procs(ProcTiming.ON_HIT):
+        if proc.should_trigger():
+            result = proc.trigger(attacker, defender, context={ })
+            if result:
+                extra_damage = round(result.get("extra_damage", 0))
+                dmg += extra_damage
 
     # Test for parry
     if random.random() < 0.2:
@@ -119,6 +145,8 @@ def do_melee(attacker: Bloke):
         dmg *= 2
 
     defender.take_damage(dmg)
+
+
 
 
 if __name__ == "__main__":
