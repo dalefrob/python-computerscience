@@ -2,14 +2,35 @@ import random
 from collections import deque
 from helpers import *
 from bloke import *
-from spells import Spell
+from spells import *
 
 blokes = []
 turn_queue = deque()
 
+def gen_test_blokes():
+    blokes = []
+
+    blokes.append(Bloke("Brad"))
+    blokes.append(Bloke("Rob"))
+    blokes.append(Bloke("Carter"))
+
+    dale = Bloke("Dale")
+    dale.equip_item(make_ring())
+    blokes.append(dale)
+
+    orion = Bloke("Orion")
+    orion.spells.append(("doomsday", 15))
+    orion.buff_manager.add_buff(make_reflect())
+    blokes.append(orion)
+
+    return blokes
+
+#battle = Battle(gen_test_blokes())
+
 def main():
     setup()
     main_loop()
+
 
 
 def setup():
@@ -27,6 +48,7 @@ def setup():
     #blokes.append(Bloke("Boa"))
     orion = Bloke("Orion the Destroyer")
     orion.spells.append(("doomsday", 15))
+    orion.buff_manager.add_buff(make_reflect())
     blokes.append(orion)
 
 
@@ -55,7 +77,7 @@ def main_loop():
                 do_turn(bloke)
         else:
             winning_bloke = turn_queue[0]
-            print(colored(MAGENTA, f"🏆  Winner: {winning_bloke.name}"))
+            print(colored(CYAN, f"🏆  Winner: {winning_bloke.name}"))
             gameover = True
 
 
@@ -67,7 +89,7 @@ def on_bloke_defeated(bloke):
 def do_turn(bloke: Bloke):
     new_defeated.clear()
     turn_string = colored(LIGHTBLUE, f"\n{bloke.name}'s turn!")
-    print(turn_string)
+    print(turn_string, f"HP:{bloke.hp}")
 
     bloke.new_turn() 
 
@@ -82,7 +104,7 @@ def do_turn(bloke: Bloke):
 
     # do a defeated check
     for def_bloke in new_defeated:
-        print(f"💀  {def_bloke.name} was defeated.")
+        print(colored(GRAY, f"💀  {def_bloke.name} was defeated."))
 
     # If we're still alive, add oursleves back to the queue
     if not bloke.defeated:
@@ -119,7 +141,7 @@ def do_melee(attacker: Bloke):
     dodge_chance = defender.get_dodge_chance()
     roll = random.uniform(0, 100)
     if roll < dodge_chance:
-        print(colored(GRAY, f"{defender.name} dodged the attack."))
+        print(f"💨  {defender.name} dodged the attack.")
         return
 
     # Assume hit --
@@ -134,14 +156,18 @@ def do_melee(attacker: Bloke):
                 dmg += extra_damage
 
     # Test for parry
-    if random.random() < 0.2:
-        print(f"{defender.name} parried!")
+    parry_chance = defender.get_parry_chance()
+    roll = random.uniform(0, 100)
+    if roll < parry_chance:
+        print(f"⚔️  {defender.name} parried!")
         attacker.take_damage(int(dmg / 2))
         return
 
     # Test for critical hit
-    if random.random() < 0.2:
-        print("CRIT!")
+    crit_chance = attacker.get_crit_chance()
+    roll = random.uniform(0, 100)
+    if roll < crit_chance:
+        print(colored((255, 0, 0),"♢ CRIT! ♢"))
         dmg *= 2
 
     defender.take_damage(dmg)

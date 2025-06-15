@@ -57,6 +57,12 @@ class Bloke:
     def _get_stat_total(self, stat_name : Stat):
         return self._base_stats[stat_name] + self.get_item_stats(stat_name) + self.get_stat_buffs(stat_name)
 
+    def get_parry_chance(self):
+        base_parry = self._base_bonus[BonusStat.PARRY]
+        strength_factor = 0.2
+        bonus = self.get_bonus_stat_buffs(BonusStat.PARRY)
+        return base_parry + (self.strength * strength_factor) + bonus # + additional from buffs and items
+
     def get_crit_chance(self):
         base_crit = self._base_bonus[BonusStat.CRIT]
         agility_factor = 0.2

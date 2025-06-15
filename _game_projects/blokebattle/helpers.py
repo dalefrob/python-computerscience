@@ -3,8 +3,9 @@ from enum import IntFlag, Enum, auto
 # Colors
 ORANGE = (255, 190, 0)
 MAGENTA = (255, 0, 255)
+CYAN = (0, 255, 255)
 LIGHTBLUE = (0, 100, 200)
-GRAY = (200, 200, 200)
+GRAY = (160, 160, 160)
 RED = (200, 0, 0)
 GREEN = (0, 200, 0)
 YELLOW = (200, 200, 0)
@@ -27,6 +28,7 @@ class Elements(str, Enum):
     def __str__(self):
         return self.value
 
+
 class Stat(str, Enum):
     STRENGTH = "strength"
     STAMINA = "stamina"
@@ -36,6 +38,7 @@ class Stat(str, Enum):
     def __str__(self):
         return self.value
 
+
 class BonusStat(str, Enum):
     DODGE = "dodge"
     CRIT = "crit"
@@ -43,6 +46,15 @@ class BonusStat(str, Enum):
 
     def __str__(self):
         return self.value
+
+
+class BuffFlags(IntFlag):
+    NONE = auto()
+    PREVENT_ACTION = auto()
+    REFLECT_MAGIC = auto()
+    MAG_WEAKNESS = auto()
+    MAG_RESISTANCE = auto()
+
 
 class ProcTiming(IntFlag):
     ON_TURNSTART = auto()

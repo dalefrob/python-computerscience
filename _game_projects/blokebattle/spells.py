@@ -6,28 +6,44 @@ from copy import copy
 
 
 class Spell():
-  def __init__(self, name, num_targets = 1, effects = []):
-    self.name = name
-    self.num_targets = num_targets
-    self.effects = effects
+    def __init__(self, name, num_targets = 1, effects = []):
+        self.name = name
+        self.num_targets = num_targets
+        self.effects = effects
   
-  def cast(self, caster, targets):
-    cast_string = colored(YELLOW, f"**{caster.name} casts {self.name}!")
-    print(cast_string)
-    for target in targets:
+
+    def cast(self, caster, targets):
+        cast_string = colored(YELLOW, f"**{caster.name} casts {self.name}!")
+        print(cast_string)
+
+        for target in targets:
+            # check reflect
+            if (target.get_status_effects() & BuffFlags.REFLECT_MAGIC) and self.is_reflectable():
+                self.reflect_spell(caster, target)
+                return
+            for effect in self.effects:
+                effect.apply(caster, target)
+
+
+    def is_reflectable(self):
+        return all(effect.apply_to_self == False for effect in self.effects)
+
+
+    def reflect_spell(self, original_caster, original_target):
+        reflect_string = colored(ORANGE, f"**{original_target.name} reflects {self.name}!")
+        print(reflect_string)
         for effect in self.effects:
-            effect.apply(caster, target)
+            effect.apply(original_caster, original_caster)
 
-
-def deal_damage(caster, target):
-  damage = caster.agi
-  target.take_damage(damage)
 
 
 ### Reusable spell effects
 
 class SpellEffect():
     """Base class for spell effects."""
+    def __init__(self):
+        self.apply_to_self = False
+
     def apply(self, caster, target):
         pass  # To be implemented by subclasses
 
@@ -35,13 +51,14 @@ class SpellEffect():
 class DealDamage(SpellEffect):
     """Damage effect with customizable bonus damage."""
     def __init__(self, base_damage=0, roll_damage=(1,1), element=Elements.NONE):
+        super().__init__()
         self.base_damage = base_damage
         self.roll_damage = roll_damage
         self.element = element
 
     def apply(self, caster, target):
         min, max = self.roll_damage
-        damage = (caster.intellect // 2) + self.base_damage + random.randint(min, max) # Agility-based damage
+        damage = (caster.intellect // 2) + self.base_damage + random.randint(min, max) 
         target.take_damage(damage, self.element)
 
 
@@ -63,6 +80,7 @@ class ApplyBuff(SpellEffect):
 class HealDamage(SpellEffect):
     """Healing self."""
     def __init__(self, healing_amount=10):
+        self.apply_to_self = True
         self.healing_amount = healing_amount
 
     def apply(self, caster, target):
