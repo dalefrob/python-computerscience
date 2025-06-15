@@ -2,15 +2,20 @@ import random
 from collections import deque
 from battle import *
 
-blokes = []
-turn_queue = deque()
+print("Loading Bloke Battle...\n")
 
 def gen_test_blokes():
     blokes = []
 
-    blokes.append(Bloke("Brad"))
+    brad = Bloke("Brad")
+    brad.equip_item(make_weapon())
+    blokes.append(brad)
+    
     blokes.append(Bloke("Rob"))
-    blokes.append(Bloke("Carter"))
+
+    carter = Bloke("Carter")
+    carter.equip_item(make_fire_weapon())
+    blokes.append(carter)
 
     dale = Bloke("Dale")
     dale.equip_item(make_ring())
@@ -26,6 +31,7 @@ def gen_test_blokes():
 battle = Battle(gen_test_blokes())
 
 def main():
+    print(colored(MAGENTA, "\n*** WELCOME TO BLOKE BATTLE! ***"))
     battle.setup()
     battle.mainloop()
 

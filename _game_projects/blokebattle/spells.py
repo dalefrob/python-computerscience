@@ -10,6 +10,9 @@ class Spell():
         self.name = name
         self.num_targets = num_targets
         self.effects = effects
+        
+        for effect in self.effects:
+            effect.set_source(self)
   
 
     def cast(self, caster, targets):
@@ -43,6 +46,10 @@ class SpellEffect():
     """Base class for spell effects."""
     def __init__(self):
         self.apply_to_self = False
+        self.source = None  # The source of the effect, e.g., a spell or item
+    
+    def set_source(self, source):
+        self.source = source
 
     def apply(self, caster, target):
         pass  # To be implemented by subclasses

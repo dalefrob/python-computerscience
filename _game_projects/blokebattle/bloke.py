@@ -36,7 +36,7 @@ class Bloke:
         ]
         
         self.defeated = False
-        self.on_defeated = Signal()
+        self.on_fatal_blow = Signal()
 
     @property
     def strength(self):
@@ -98,7 +98,7 @@ class Bloke:
 
         if self.hp <= 0 and not self.defeated:
             self.defeated = True
-            self.on_defeated.emit(self)
+            self.on_fatal_blow.emit(self)
 
     def heal_damage(self, amount):
         self.hp += amount

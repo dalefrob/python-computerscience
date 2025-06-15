@@ -68,16 +68,16 @@ class Buff():
         if self.is_debuff:
             print(f"⚠️  {self.target.name} is afflicted by {self.name}.")
         else:
-            print(f"💠  {self.target.name} gained {self.name}.")
+            print(f"💠 {self.target.name} gained {self.name}.")
 
     def on_new_turn(self):
         pass
 
     def on_expired(self):
         if self.is_debuff:
-            print(f"✔️  {self.target.name} is no longer afflicted by {self.name}.")
+            print(f"✔️ {self.target.name} is no longer afflicted by {self.name}.")
         else:
-            print(f"🔶  {self.target.name} lost {self.name}.")
+            print(f"🔶 {self.target.name} lost {self.name}.")
 
 
 class StatBuff(Buff):
@@ -133,7 +133,7 @@ class HOTBuff(Buff):
         self.heal_amount = heal_amount
     
     def on_apply(self):
-        print(f"⛲️  {self.target.name} is regenerating health.")
+        print(f"⛲️ {self.target.name} is regenerating health.")
 
     def on_expired(self):
         print(f"{self.target.name} is no longer regenerating health.")
@@ -149,7 +149,7 @@ class StatusEffectBuff(Buff):
         self.status_text = status_text
 
     def on_new_turn(self):
-        print(f"❕  {self.target.name} is {self.status_text}.")
+        print(f"❕ {self.target.name} is {self.status_text}.")
 
 
 class SpellEffectBuff(Buff):
