@@ -4,6 +4,7 @@ import json
 
 base_path = Path(__file__).parent.resolve()
 image_path = base_path / "images"
+data_path = base_path / "data"
 
 def download_pokemon(name):
     response = requests.get(f"https://pokeapi.co/api/v2/pokemon/{name}") 
@@ -11,8 +12,14 @@ def download_pokemon(name):
         print("API called failed. Code: ", response.status_code)
         return
     
-    json_response = json.loads(response.content)
+    json_response = json.loads(response.content) 
+    # data
+    pretty_json = json.dumps(json_response, indent=4)
 
+    with open(f'{data_path}/{name}.json', 'w', encoding="utf8") as file:
+        file.write(pretty_json)
+   
+    # image
     img_url = json_response['sprites']['front_default']
     response = requests.get(img_url)
 
@@ -22,6 +29,6 @@ def download_pokemon(name):
     else:
         print("Failed to download image")
 
-download_pokemon("arceus")
+download_pokemon("snorlax")
 
 print("Success")
