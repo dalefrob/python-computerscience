@@ -1,0 +1,3 @@
+I wrote to a file! Ner ner! 
+New line bro. 
+5468697320697320736f6d652062797465636f64652121200a
