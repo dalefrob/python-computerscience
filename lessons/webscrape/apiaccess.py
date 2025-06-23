@@ -29,6 +29,6 @@ def download_pokemon(name):
     else:
         print("Failed to download image")
 
-download_pokemon("snorlax")
+download_pokemon("pikachu")
 
 print("Success")
