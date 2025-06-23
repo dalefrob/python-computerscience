@@ -15,4 +15,4 @@ def load_resources():
 
 ship_group = pg.sprite.Group()
 bullet_group = pg.sprite.Group()
-
+powerup_group = pg.sprite.Group()

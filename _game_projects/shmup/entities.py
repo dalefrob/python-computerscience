@@ -40,6 +40,32 @@ class Explosion(pg.sprite.Sprite):
             self.last_update = now
 
         
+class Powerup(pg.sprite.Sprite):
+    SPEED = 100
+    def __init__(self, position : tuple):
+        super().__init__(powerup_group)
+        self.position = pg.Vector2(position)
+        self.velocity = pg.Vector2(0, self.SPEED)
+        self.image = assets["tile_sheet"].subsurface(pg.Rect(16 * 1, 16 * 2, 16, 16)).copy()
+        self.rect = self.image.get_rect(center=self.position)
+    
+    def update(self, dt):
+        self.position += self.velocity * dt
+        self.rect = self.image.get_rect(center=self.position)
+
+        # check collision
+        _coll = self.rect.collideobjects(ship_group.sprites())
+        if _coll:
+            if isinstance(_coll, PlayerShip):
+                _coll.upgrade_weapon()
+                self.destroy()
+
+        if is_out_of_bounds(self):
+            self.destroy()
+    
+    def destroy(self):
+        self.kill()
+        del self
 
 
 class Bullet(pg.sprite.Sprite):
@@ -199,6 +225,10 @@ class PlayerShip(Ship):
             self.shoot()
             self.last_shot_time = pg.time.get_ticks() + self.shoot_cd
     
+
+    def upgrade_weapon(self):
+        print("Weapon Upgraded!")
+
 
     def do_input(self):
         keys = pg.key.get_pressed()

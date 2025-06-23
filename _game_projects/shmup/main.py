@@ -1,7 +1,7 @@
 import pygame as pg
 import random
 from resources import *
-from entities import PlayerShip, EnemyShip, Timer
+from entities import PlayerShip, EnemyShip, Powerup, Timer
 
 class Starfield():
     """
@@ -54,6 +54,7 @@ class WaveManager():
             5: [("EnemyShip", (200, 0), { "flipped": True })], # At 5 seconds, spawn an enemy ship at (40, 0)
             8: [("EnemyShip", (40, 0), {}), ("EnemyShip", (80, 0), {})], # At 8 seconds, spawn two enemy ships at (40, 0) and (80, 0)
             12: [("EnemyShip", (40, 0), {}), ("EnemyShip", (80, 0), {}), ("EnemyShip", (120, 0), {})],
+            3: [("Powerup", (180, 0), {})],
         }
 
 
@@ -69,7 +70,9 @@ class WaveManager():
                 arg1 = task[0]
                 match arg1:
                     case "EnemyShip":
-                        self.spawn_ship(arg1, task[1], task[2])                
+                        self.spawn_ship(arg1, task[1], task[2])
+                    case "Powerup":
+                        self.spawn_powerup(arg1, task[1], task[2])                
     
 
     def spawn_ship(self, ship, position, property_dict = {}):
@@ -78,6 +81,9 @@ class WaveManager():
         enemy_ship = EnemyShip(img, position, property_dict)
         enemy_ship.on_destroyed = handle_enemy_destroyed
 
+    def spawn_powerup(self, powerup, position, property_dict = {}):
+        print("Spawned powerup", property_dict)
+        powerup = Powerup(position)
 
 
 
@@ -88,10 +94,10 @@ screen = pg.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
 clock = pg.Clock()
 load_resources()
 
-starfield = Starfield((SCREENWIDTH, SCREENHEIGHT), 400)
+starfield = Starfield((SCREENWIDTH, SCREENHEIGHT), 800)
 stars = []
 sizes = [1, 2, 2, 2, 2, 4, 4, 8]
-for _ in range(100):
+for _ in range(200):
     star = Star(random.randint(0, SCREENWIDTH), random.randint(0, SCREENHEIGHT), random.choice(sizes))
     stars.append(star)
 
@@ -127,9 +133,11 @@ while running:
     wavemanager.update(dt)
 
     ship_group.update(dt)
+    powerup_group.update(dt)
     bullet_group.update(dt)
 
     ship_group.draw(screen)
+    powerup_group.draw(screen)
     bullet_group.draw(screen)
 
     # render score
