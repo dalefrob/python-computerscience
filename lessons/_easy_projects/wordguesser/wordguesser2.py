@@ -3,11 +3,17 @@ from rich import print
 from rich.prompt import Prompt
 
 # Make sure all projects load a word ---
-# Show students 
-# how to install new modules
+# how to install new modules OK!
 # how to load words from a text file
 
 wordlist = ["apple", "banana", "strawberry"]
+
+with open("words.txt", "r") as file:
+    line = file.readline()
+    while line:
+        # Process the line here
+        wordlist.append(line.strip())  
+        line = file.readline()
 
 mistakes = 0
 MAX_MISTAKES = 5
