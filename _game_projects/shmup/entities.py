@@ -188,7 +188,7 @@ class Ship(pg.sprite.Sprite):
 
 
     def shoot(self):
-        bullet = Bullet(self, self.position + pg.Vector2(0, -20), (0, -300) ,bullet_group)
+        bullet = Bullet(self, self.position + pg.Vector2(0, -20), (0, -300), bullet_group)
         self.bullets.append(bullet)
     
 
@@ -206,6 +206,7 @@ class Ship(pg.sprite.Sprite):
 class PlayerShip(Ship):
     def __init__(self, image, position):
         super().__init__(image, position, ship_group)
+        self.weapon_level = 1
     
 
     def update(self, dt):
@@ -226,8 +227,22 @@ class PlayerShip(Ship):
             self.last_shot_time = pg.time.get_ticks() + self.shoot_cd
     
 
+    def shoot(self):
+        if self.weapon_level > 1:
+            # left bullet
+            bullet = Bullet(self, self.position + pg.Vector2(-8, -20), (0, -300), bullet_group)
+            self.bullets.append(bullet)
+            # right bullet
+            bullet2 = Bullet(self, self.position + pg.Vector2(8, -20), (0, -300), bullet_group)
+            self.bullets.append(bullet2)
+        else:
+            super().shoot()
+
+
+
     def upgrade_weapon(self):
         print("Weapon Upgraded!")
+        self.weapon_level += 1
 
 
     def do_input(self):

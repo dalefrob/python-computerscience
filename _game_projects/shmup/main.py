@@ -54,7 +54,7 @@ class WaveManager():
             5: [("EnemyShip", (200, 0), { "flipped": True })], # At 5 seconds, spawn an enemy ship at (40, 0)
             8: [("EnemyShip", (40, 0), {}), ("EnemyShip", (80, 0), {})], # At 8 seconds, spawn two enemy ships at (40, 0) and (80, 0)
             12: [("EnemyShip", (40, 0), {}), ("EnemyShip", (80, 0), {}), ("EnemyShip", (120, 0), {})],
-            3: [("Powerup", (180, 0), {})],
+            2: [("Powerup", (180, 0), {})],
         }
 
 
