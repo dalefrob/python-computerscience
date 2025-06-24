@@ -6,9 +6,9 @@ file_path = os.path.abspath(__file__)
 # Get the folder (directory) that contains this file
 file_directory = os.path.dirname(file_path)
 
-newfiles_directory = file_directory + "/texts"
+newfiles_directory = file_directory + "/output"
 
-if not os.path.exists(file_directory + "/texts"):
+if not os.path.exists(file_directory + "/output"):
     os.makedirs(newfiles_directory)
 
 with open(f"{newfiles_directory}/myfile.txt", "w") as file:
@@ -16,6 +16,5 @@ with open(f"{newfiles_directory}/myfile.txt", "w") as file:
     file.write("New line bro. \n")
 
 with open(f"{newfiles_directory}/myfile.txt", "a") as file:
-    message = "This is some bytecode!! \n".encode("utf-8")
-    h_message = message.hex()
-    file.write(h_message)
+    message = "This is some appended text!! \n".encode("utf-8")
+
