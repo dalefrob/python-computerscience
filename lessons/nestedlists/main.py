@@ -11,6 +11,7 @@ for row in grid:
     print("|".join(strrow))
     print("-------")
 
+
 def sum_cols_rows(grid):
     row_sums = [0,0,0,0]
     col_sums = [0,0,0,0]

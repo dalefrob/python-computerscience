@@ -15,5 +15,8 @@ p1.introduce() # call the method
 
 print(p1)
 
+# YOU ALMOST NEVER DO THIS
 del p1.age # delete a property
+
+# THIS IS MORE COMMON
 del p1 # delete the object

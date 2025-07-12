@@ -1,19 +1,20 @@
-# try and catch errors
-
-try:
-  f = open("demofile.txt")
+# test for exceptions and handle them
+while True:
+  myinput = input("Enter two numbers separated by a space")
   try:
-    f.write("Lorum Ipsum")
+    stripped = myinput.strip()
+    num1, num2 = stripped.split(" ")
+    print(f"You entered numbers {num1} and {num2}.")
+    break # < ---- break exits the while loop
   except:
-    print("Something went wrong when writing to the file")
+    print("Invalid input!")
   finally:
-    f.close()
-except:
-  print("Something went wrong when opening the file")
+    print("Out of the try except block")
 
-# raise custom errors
+# raise your own exceptions
+age = input("Enter your age: ")
 
-x = -1
+if int(age) <= 0:
+  raise Exception("Sorry, you must have been born first.")
 
-if x < 0:
-  raise Exception("Sorry, no numbers below zero")
+print("Does the program get here?")

@@ -1,4 +1,4 @@
-# TIC TAC TOE
+# TIC TAC TOE / NAUGHTS AND CROSSES
 
 def print_board(board):
     print("\n")
@@ -81,10 +81,15 @@ def get_move(player):
 
 # Entry point of the game
 def main():
-    board = [[" " for _ in range(3)] for _ in range(3)]
+    # Create the board
+    board = []
+    for _ in range(3):
+        board.append([" ", " ", " "])
+
+    #board = [[" " for _ in range(3)] for _ in range(3)] # Create the board a quicker way
     current_player = "X"
 
-    while True:
+    while True: # Main game loop
         print_board(board)
         row, col = get_move(current_player)
 
@@ -103,8 +108,13 @@ def main():
             print_board(board)
             print("It's a draw!")
             break
+        
+        if current_player == "X":
+            current_player = "O"
+        else:
+            current_player = "X" 
 
-        current_player = "O" if current_player == "X" else "X"
+        # current_player = "O" if current_player == "X" else "X"
 
 
 if __name__ == "__main__":
