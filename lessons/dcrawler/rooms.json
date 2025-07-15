@@ -1,0 +1,18 @@
+{
+    "rooms": [
+        {
+            "description": "A disgusting room with slime all over the walls.",
+            "items": [
+                "key",
+                "gold"
+            ]
+        },
+        {
+            "description": "A narrow corridoor with spiderwebs above.",
+            "items": [],
+            "monster": [
+                "spider"
+            ]
+        }
+    ]
+}
