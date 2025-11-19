@@ -12,7 +12,11 @@ class Player:
             return False
         if new_y < 0 or new_y >= len(map):
             return False
-        if map[new_x][new_y] == None:
+        # [[-,p,-]
+        #  [-,-,-]]   
+        # When you move in y - you are changing row
+        # Wen you move in x - you are changing column
+        if map[new_y][new_x] == None:
             return False
 
         self.x = new_x
