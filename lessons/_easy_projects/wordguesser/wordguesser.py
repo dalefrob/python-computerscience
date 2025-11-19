@@ -3,13 +3,6 @@ import random
 # List of possible words
 words = ["string"]
 
-# with open("words.txt", "r") as file:
-#     line = file.readline()
-#     while line:
-#         # Process the line here
-#         words.append(line.strip())  # Remove trailing newline character
-#         line = file.readline()
-
 # Randomly select a word
 secret_word = random.choice(words)
 
@@ -22,8 +15,7 @@ guessed_letters = []
 print("Welcome to the Word Guessing Game!")
 print("Try to guess the word, one letter at a time.")
 
-def display_word():
-    # This just prints out the current state of the word
+def display_word():  # This just prints out the current state of the word
     print("Word: " + " ".join(hidden_word))
 
 def guess_letter():
@@ -32,10 +24,13 @@ def guess_letter():
     if letter == secret_word:
         for i, char in enumerate(secret_word):
             hidden_word[i] = char
+    
     elif letter in guessed_letters:
         print(f"You already guessed '{letter}'. Try again.")
+
     elif len(letter) != 1 or not letter.isalpha():
         print("Please enter a single valid letter.")
+        
     else:
         guessed_letters.append(letter)
         if letter in secret_word:
