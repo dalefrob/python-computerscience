@@ -46,3 +46,4 @@ battle(playerpokemon, cpupokemon)
 # The opponent should be random DONE
 
 # Redesign the win condition so a strong pokemon of a weaker type can still win
+# Fix bug where you need to catch a pokemon before you can battle

@@ -177,7 +177,7 @@ pygame.display.set_caption('Ray-casting')
 clock = pygame.time.Clock()
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-wall_texture = pygame.image.load(current_path + '/wall.png').convert()
+wall_texture = pygame.image.load(current_path + '/textures/wall.png').convert()
 wall_texture = pygame.transform.scale(wall_texture, (64, 64))  # ensure it's 64×64
 
 #game loop
