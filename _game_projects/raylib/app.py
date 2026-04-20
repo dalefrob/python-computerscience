@@ -1,6 +1,9 @@
 from pyray import *
 import math
 
+from player import Player
+from collectible import Collectible
+
 SCREENWIDTH = 800
 SCREENHEIGHT = 600
 
@@ -14,35 +17,6 @@ gamemap = [
     [1, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1],
 ]
-
-camera_pos = [0, 0, -5]
-camera_rot = 0.0
-
-def handle_input(camera_pos, camera_rot):
-    global camera
-    speed = 0.01
-    front = [math.sin(camera_rot), 0.0, math.cos(camera_rot)]
-    right = [math.cos(camera_rot), 0.0, -math.sin(camera_rot)]
-
-    if is_key_down(KeyboardKey.KEY_LEFT):
-        camera_rot += 0.005
-    if is_key_down(KeyboardKey.KEY_RIGHT):
-        camera_rot -= 0.005
-    if is_key_down(KeyboardKey.KEY_UP):
-        camera_pos[0] += front[0] * speed
-        camera_pos[2] += front[2] * speed
-    if is_key_down(KeyboardKey.KEY_DOWN):
-        camera_pos[0] -= front[0] * speed
-        camera_pos[2] -= front[2] * speed
-
-    camera.target = Vector3(
-        camera_pos[0] + front[0],
-        camera_pos[1] + front[1],
-        camera_pos[2] + front[2],
-    )
-    camera.position = Vector3(camera_pos[0], camera_pos[1], camera_pos[2])
-
-    return camera_rot  # camera_pos mutates in place (it's a list), rot needs returning
 
 
 def draw_map_2d(pos_x, pos_y):
@@ -63,26 +37,47 @@ def draw_map_3d():
                 draw_cube_wires(wall_pos, 1, 1, 1, BLACK)
 
 
-camera = Camera3D(
-    [0, 2, -5],
-    [0, 0, 0],
-    [0, 1, 0],
-    45.0,
-    CameraProjection.CAMERA_PERSPECTIVE
-)
+def draw_crosshair():
+    size = 8
+    cx, cy = SCREENWIDTH // 2, SCREENHEIGHT // 2
+    draw_line(cx - size, cy, cx + size, cy, YELLOW)
+    draw_line(cx, cy - size, cx, cy + size, YELLOW)
+
+player = Player(Vector3(3,0,2), gamemap)
 
 set_config_flags(ConfigFlags.FLAG_MSAA_4X_HINT)
 init_window(SCREENWIDTH, SCREENHEIGHT, "Hello")
+set_target_fps(60)
+disable_cursor()
+
+# Collectible test
+texture = load_texture("assets/goodies.png")
+collectible = Collectible(Vector3(3,-0.25,3), texture)
+
+
 while not window_should_close():
-    camera_rot = handle_input(camera_pos, camera_rot)  # capture returned rot
+    player.update()
+    collectible.update()
+    if check_collision_boxes(player.get_bounding_box(), collectible.get_bounding_box()):
+        print("Got collectible")
+
     begin_drawing()
 
     clear_background(WHITE)
     draw_map_2d(0, 0)
 
-    begin_mode_3d(camera)
+    begin_mode_3d(player.camera)
     draw_map_3d()
+    collectible.draw(player.camera)
+
+
     end_mode_3d()
 
+    draw_crosshair()
+    # gui items
+    gui_text_box(Rectangle(10, 10, 50, 20), "Textbox", 16, False)
+
     end_drawing()
+
+unload_texture(texture)
 close_window()
