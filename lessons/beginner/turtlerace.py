@@ -1,16 +1,39 @@
 # race.py - simplest turtle race simulator
 import turtle
-import math
 import random
+import time
+
+super_colors = [(0,255,255), (255,255,0), (255,0,255)]
+
+class SuperTurtle(turtle.Turtle):
+    def __init__(self, name : str, orig_color):
+        super().__init__("turtle", 1000, True)
+        self.name = name
+        self.super = 0
+        self.orig_color = orig_color
+
+        self.color((0,0,0), orig_color)
+    
+    def move(self):
+        move_amt = random.randint(1, 4)
+        if self.super > 0:
+            self.color(super_colors[self.super % 3], self.orig_color)
+            move_amt *= 2
+            self.super -= 1
+        else:
+            self.color((0,0,0),self.orig_color)
+        self.forward(move_amt)
+
 
 screen = turtle.Screen()
-screen.setup(width=600, height=300)
+screen.setup(width=800, height=600)
 screen.title("Simple Turtle Race")
 screen.colormode(255)
 screen.bgcolor((20, 100, 30))
+screen.delay = 0
 
 # Finish line x coordinate
-finish_x = 230
+finish_x = 330
 
 number_of_turtles = int(screen.textinput("Turtle Race!", "How many racers 1-10?"))
 # clamp value
@@ -19,13 +42,11 @@ if number_of_turtles <= 1:
 elif number_of_turtles >= 10:
     number_of_turtles = 10
 
-turtles = []
+turtles : list[SuperTurtle] = []
 for i in range(number_of_turtles):
-    t = turtle.Turtle(shape="turtle")
-    t.speed(10)
-    turtle.colormode(255)
     color_tuple = (random.randrange(0,255), random.randrange(0,255), random.randrange(0,255))
-    t.color((0,0,0),color_tuple)
+    t = SuperTurtle("default", color_tuple)
+    t.speed(10)
     t.penup()
     t.goto(-250, -100 + (20 * i))
     turtles.append(t)
@@ -33,7 +54,7 @@ for i in range(number_of_turtles):
 # Draw finish line
 line = turtle.Turtle()
 line.hideturtle()
-turtle.tracer(0)
+turtle.tracer(0, 0)
 line.penup()
 line.goto(finish_x, 150)
 line.delay = 0
@@ -64,16 +85,18 @@ for i in range(2):
         draw_square(line, finish_x + (i * 10), 150 - j * 10, black)
     square_count += 1
 
-turtle.update()
-turtle.tracer(1)
-
 # Race loop
 winner : turtle.Turtle = None
 while not winner:
+    random.shuffle(turtles)
     for t in turtles:
-        t.forward(random.randint(1, 10))
+        if random.random() < 0.01:
+            t.super = 20
+        t.move()
         if t.xcor() >= finish_x:
             winner = t
+    screen.update()
+    time.sleep(0.05)
 
 # Announce winner
 announce = turtle.Turtle()
@@ -82,7 +105,9 @@ announce.penup()
 announce.goto(0, 0)
 announce.write("We have a winner!", align="center", font=("Arial", 18, "bold"))
 
-for i in range(720//10):
-    winner.left(10)
+screen.tracer(1)
+
+for i in range(720):
+    winner.left(1)
 
 screen.mainloop()
