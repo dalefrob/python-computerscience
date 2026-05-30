@@ -3,6 +3,7 @@ import turtle
 import random
 import time
 
+turtle_names = ["Leo", "Mikey", "Raph", "Don", "Koopa", "Iggy", "Roy", "Morton", "Ludwig", "Wendy"]
 super_colors = [(0,255,255), (255,255,0), (255,0,255)]
 
 class SuperTurtle(turtle.Turtle):
@@ -11,7 +12,7 @@ class SuperTurtle(turtle.Turtle):
         self.name = name
         self.super = 0
         self.orig_color = orig_color
-
+        self.shapesize(1.5, 1.5, 2)
         self.color((0,0,0), orig_color)
     
     def move(self):
@@ -23,42 +24,6 @@ class SuperTurtle(turtle.Turtle):
         else:
             self.color((0,0,0),self.orig_color)
         self.forward(move_amt)
-
-
-screen = turtle.Screen()
-screen.setup(width=800, height=600)
-screen.title("Simple Turtle Race")
-screen.colormode(255)
-screen.bgcolor((20, 100, 30))
-screen.delay = 0
-
-# Finish line x coordinate
-finish_x = 330
-
-number_of_turtles = int(screen.textinput("Turtle Race!", "How many racers 1-10?"))
-# clamp value
-if number_of_turtles <= 1:
-    number_of_turtles = 2
-elif number_of_turtles >= 10:
-    number_of_turtles = 10
-
-turtles : list[SuperTurtle] = []
-for i in range(number_of_turtles):
-    color_tuple = (random.randrange(0,255), random.randrange(0,255), random.randrange(0,255))
-    t = SuperTurtle("default", color_tuple)
-    t.speed(10)
-    t.penup()
-    t.goto(-250, -100 + (20 * i))
-    turtles.append(t)
-
-# Draw finish line
-line = turtle.Turtle()
-line.hideturtle()
-turtle.tracer(0, 0)
-line.penup()
-line.goto(finish_x, 150)
-line.delay = 0
-line.speed(0)
 
 def draw_square(t : turtle.Turtle, x, y, black = False):
     t.goto(x, y)
@@ -76,6 +41,40 @@ def draw_square(t : turtle.Turtle, x, y, black = False):
     t.end_fill()
     t.penup()
 
+
+screen = turtle.Screen()
+screen.setup(width=800, height=600)
+screen.title("Simple Turtle Race")
+screen.colormode(255)
+screen.bgcolor((20, 100, 30))
+screen.delay = 0
+
+# Finish line x coordinate
+finish_x = 330
+
+# Draw Track
+turtle.tracer(0, 0)
+track = turtle.Turtle()
+track.hideturtle()
+track.penup()
+track.goto(-400, -150)
+track.pendown()
+track.color((152,88,63))
+track.begin_fill()
+track.goto(400, -150)
+track.goto(400, 150)
+track.goto(-400, 150)
+track.end_fill()
+
+
+# Draw finish line
+line = turtle.Turtle()
+line.hideturtle()
+line.penup()
+line.goto(finish_x, 150)
+line.delay = 0
+line.speed(0)
+
 # draw checkered finish
 square_count = 0
 for i in range(2):
@@ -85,13 +84,34 @@ for i in range(2):
         draw_square(line, finish_x + (i * 10), 150 - j * 10, black)
     square_count += 1
 
+
+# number_of_turtles = int(screen.textinput("Turtle Race!", "How many racers 1-10?"))
+# # clamp value
+# if number_of_turtles <= 1:
+#     number_of_turtles = 2
+# elif number_of_turtles >= 10:
+    # number_of_turtles = 10
+
+turtles : list[SuperTurtle] = []
+for i in range(5):
+    color_tuple = (random.randrange(0,255), random.randrange(0,255), random.randrange(0,255))
+    # set the name, then remove so no duplicates
+    rand_name = random.choice(turtle_names)
+    turtle_names.remove(rand_name)
+    t = SuperTurtle(rand_name, color_tuple)
+    t.speed(10)
+    t.penup()
+    t.goto(-350, -100 + (45 * i))
+    t.write(rand_name, True, "left", ("Arial", 12, "bold"))
+    turtles.append(t)
+
 # Race loop
 winner : turtle.Turtle = None
 while not winner:
     random.shuffle(turtles)
     for t in turtles:
         if random.random() < 0.01:
-            t.super = 20
+            t.super = random.randint(20, 30)
         t.move()
         if t.xcor() >= finish_x:
             winner = t
@@ -102,8 +122,9 @@ while not winner:
 announce = turtle.Turtle()
 announce.hideturtle()
 announce.penup()
-announce.goto(0, 0)
-announce.write("We have a winner!", align="center", font=("Arial", 18, "bold"))
+announce.goto(0, 200)
+announce.color(winner.orig_color)
+announce.write(f"{winner.name} is the winner!", align="center", font=("Arial", 18, "bold"))
 
 screen.tracer(1)
 
